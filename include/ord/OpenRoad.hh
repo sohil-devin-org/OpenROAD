@@ -68,8 +68,9 @@ class RamGen;
 }
 
 namespace thm {
+class PlacementPhysics;
 class Thermal;
-}
+}  // namespace thm
 
 namespace exa {
 class Example;
@@ -288,6 +289,7 @@ class OpenRoad
   mpl::MacroPlacer* macro_placer_ = nullptr;
   exa::Example* example_ = nullptr;
   thm::Thermal* thermal_ = nullptr;
+  thm::PlacementPhysics* placement_physics_ = nullptr;
   grt::GlobalRouter* global_router_ = nullptr;
   cgt::ClockGating* clock_gating_ = nullptr;
   rmp::Restructure* restructure_ = nullptr;

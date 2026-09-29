@@ -46,6 +46,7 @@ cc_library(
     name = "thm",
     srcs = [
         "src/PhysicsCoupling.cpp",
+        "src/PlacementPhysics.cpp",
         "src/Thermal.cpp",
         "src/animation.cpp",
         "src/heatMap.cpp",
@@ -54,6 +55,7 @@ cc_library(
     hdrs = [
         "include/thm/Animation.h",
         "include/thm/PhysicsCoupling.h",
+        "include/thm/PlacementPhysics.h",
         "include/thm/Thermal.h",
     ],
     includes = [
@@ -64,6 +66,7 @@ cc_library(
         ":thm_core",
         "//src/dbSta",
         "//src/dbSta:dbNetwork",
+        "//src/gpl",
         "//src/odb/src/db",
         "//src/psm",
         "//src/sta:opensta_lib",
