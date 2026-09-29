@@ -62,8 +62,12 @@ std::string TemperatureDataSource::getValueUnits() const
 
 std::string TemperatureDataSource::formatValue(double value, bool legend) const
 {
+  // HotSpot reports temperatures with two decimals; show them when the
+  // whole map spans less than a degree so a nearly flat map stays readable.
+  const bool fine = getMaxValue() - getMinValue() < 1.0;
   char text[32];
-  std::snprintf(text, sizeof(text), "%.1f", convertPercentToValue(value));
+  std::snprintf(
+      text, sizeof(text), fine ? "%.2f" : "%.1f", convertPercentToValue(value));
   std::string result(text);
   if (legend) {
     result += " " + getValueUnits();
