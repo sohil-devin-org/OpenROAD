@@ -57,6 +57,7 @@ class ClockWidget;
 class BrowserWidget;
 class ChartsWidget;
 class HelpWidget;
+class PhysicsWidget;
 
 // This is the main window for the GUI.  Currently we use a single
 // instance of this class.
@@ -95,6 +96,7 @@ class MainWindow : public QMainWindow, public odb::dbDatabaseObserver
   HelpWidget* getHelpViewer() const { return help_widget_; }
   ChartsWidget* getChartsWidget() const { return charts_widget_; }
   TimingWidget* getTimingWidget() const { return timing_widget_; }
+  PhysicsWidget* getPhysicsWidget() const { return physics_widget_; }
 
   std::vector<std::string> getRestoreTclCommands();
 
@@ -348,6 +350,7 @@ class MainWindow : public QMainWindow, public odb::dbDatabaseObserver
   BrowserWidget* hierarchy_widget_;
   ChartsWidget* charts_widget_;
   HelpWidget* help_widget_;
+  PhysicsWidget* physics_widget_;
 
   FindObjectDialog* find_dialog_;
   GotoLocationDialog* goto_dialog_;

@@ -7,15 +7,25 @@
 #include <vector>
 
 #include "odb/db.h"
+#include "odb/geom.h"
+#include "thm/PhysicsState.h"
 #include "web/heatMap.h"
 
 namespace thm {
 
 class Thermal;
 
+// Rectangle (DBU) of lateral tile (x, y) of an nx*ny map covering die_rect.
+odb::Rect physicsTileRect(const odb::Rect& die_rect,
+                          int nx,
+                          int ny,
+                          int x,
+                          int y);
+
 // Absolute temperature heat map (degrees C) of the active layer of a die.
 // The scale is absolute by default (fixed min/max in C) so that maps from
-// different iterations / runs are directly comparable.
+// different iterations / runs are directly comparable.  Draws the live grid,
+// or the history snapshot selected with Thermal::setDisplayedSnapshot.
 class TemperatureDataSource : public web::RealValueHeatMapDataSource
 {
  public:
@@ -31,6 +41,7 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
   }
   double getScaleMin() const { return scale_min_c_; }
   double getScaleMax() const { return scale_max_c_; }
+  bool isFixedScale() const { return fixed_scale_; }
 
  protected:
   bool populateMap() override;
@@ -44,6 +55,9 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
 
  private:
   std::vector<std::string> dieChoices() const;
+  std::vector<std::string> scaleChoices() const;
+  std::string scaleChoice() const;
+  void setScaleChoice(const std::string& choice);
 
   Thermal* thermal_;
   int die_ = 0;
@@ -83,6 +97,7 @@ class PhysicsMapDataSource : public web::RealValueHeatMapDataSource
 
  private:
   std::vector<std::string> dieChoices() const;
+  bool buildMap(MapSnapshot& map) const;
 
   Thermal* thermal_;
   Kind kind_;

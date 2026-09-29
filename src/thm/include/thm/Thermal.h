@@ -196,6 +196,21 @@ class Thermal
   sta::dbSta* sta() const { return sta_; }
   utl::Logger* logger() const { return logger_; }
 
+  // ---- GUI history playback ----------------------------------------------
+  // Index of the history snapshot the Temperature heat map draws instead of
+  // the live grid; -1 (default) draws the live grid.  Refreshes the physics
+  // heat maps.
+  void setDisplayedSnapshot(int index);
+  int displayedSnapshot() const { return displayed_snapshot_; }
+  // The snapshot selected with setDisplayedSnapshot, or nullptr when the
+  // live grid is displayed (or the index is out of range).
+  const PhysicsSnapshot* displayedSnapshotData() const;
+  // Temperature map (C) the heat map draws: the displayed history snapshot
+  // when one is selected, otherwise the live grid.
+  MapSnapshot displayedTemperatureMap(int die = 0) const;
+  // Re-populate every registered physics heat map instance.
+  void refreshHeatMaps();
+
  private:
   odb::dbBlock* getBlock() const;
   void ensureGrid();
@@ -240,6 +255,7 @@ class Thermal
   std::set<PhysicsObserver*> observers_;
 
   std::vector<web::HeatMapSourceHandle> heatmap_sources_;
+  int displayed_snapshot_ = -1;
 };
 
 }  // namespace thm

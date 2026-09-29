@@ -1065,4 +1065,43 @@ void Thermal::removeObserver(PhysicsObserver* observer)
   observers_.erase(observer);
 }
 
+// ---------------------------------------------------------------------------
+// GUI history playback
+
+void Thermal::setDisplayedSnapshot(int index)
+{
+  if (index < 0 || index >= history_.size()) {
+    index = -1;
+  }
+  displayed_snapshot_ = index;
+  refreshHeatMaps();
+}
+
+const PhysicsSnapshot* Thermal::displayedSnapshotData() const
+{
+  if (displayed_snapshot_ < 0 || displayed_snapshot_ >= history_.size()) {
+    return nullptr;
+  }
+  return &history_.at(displayed_snapshot_);
+}
+
+MapSnapshot Thermal::displayedTemperatureMap(int die) const
+{
+  const PhysicsSnapshot* snapshot = displayedSnapshotData();
+  if (snapshot != nullptr) {
+    const MapSnapshot* map = snapshot->findMap("temperature", die);
+    if (map != nullptr) {
+      return *map;
+    }
+  }
+  return temperatureMap(die);
+}
+
+void Thermal::refreshHeatMaps()
+{
+  for (web::HeatMapSourceHandle& source : heatmap_sources_) {
+    source->invalidateInstances();
+  }
+}
+
 }  // namespace thm

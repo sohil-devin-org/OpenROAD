@@ -65,6 +65,7 @@ if (Qt5_FOUND AND BUILD_GUI)
     src/clockWidget.cpp
     src/gui_utils.cpp
     src/chartsWidget.cpp
+    src/physicsWidget.cpp
     src/GUIProgress.cpp
     src/dropdownCheckboxes.cpp
     resources/resource.qrc
@@ -81,6 +82,7 @@ if (Qt5_FOUND AND BUILD_GUI)
       OpenGL::GL
       gui_core
       dbSta
+      thm_lib
       utl_lib
       Boost::boost
       OpenSTA
