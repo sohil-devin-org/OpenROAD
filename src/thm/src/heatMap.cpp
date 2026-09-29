@@ -17,7 +17,7 @@ namespace thm {
 
 namespace {
 
-constexpr double kMinTemperatureC = -273.15;
+constexpr double kMinTemperatureC = -273.0;
 constexpr double kMaxTemperatureC = 1000.0;
 constexpr double kFixedRangeStepC = 1.0;
 
