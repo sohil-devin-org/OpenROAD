@@ -183,11 +183,32 @@ insert_decap -target_cap target_cap [-net net_name] -cells list_of_decap_with_ca
 ### Analyze Thermal
 
 Runs a steady-state thermal analysis of the placed design with the external
-[HotSpot](https://github.com/uvahotspot/HotSpot) simulator. Per-instance
-power comes from OpenSTA (or `set_pdnsim_inst_power` overrides), is binned
-into a tile floorplan of the die, and HotSpot is run in grid mode. The
-resulting silicon-layer temperature grid is reported and shown in the
-`Thermal` heat map of the GUI. HotSpot is not bundled with OpenROAD.
+[HotSpot](https://github.com/uvahotspot/HotSpot) simulator. HotSpot is not
+bundled with or linked into OpenROAD; it is run as a separate executable.
+
+The flow is:
+
+1. The power of every placed instance is taken from OpenSTA for the selected
+   corner, or from `set_pdnsim_inst_power` when set. Instances (including
+   macros) without Liberty power and without an override dissipate no power
+   and are counted in a warning. Unplaced instances are ignored.
+1. The die area is split into a regular floorplan of rectangular tiles (the
+   same as the thermal grid, capped at 32 x 32 tiles and at one tile per
+   database unit). Each instance's power is
+   distributed over the tiles it overlaps in proportion to the overlap area,
+   so the total power is conserved. The floorplan (`design.flp`, meters) and
+   power trace (`design.ptrace`, watts) are written to the work directory.
+1. HotSpot is run in grid mode (`-model_type grid`) with the ambient and
+   initial temperature set to `-ambient` (converted to Kelvin).
+1. The silicon layer (layer 0) of the steady-state grid temperature file
+   (`design.grid.steady`) is read back and converted to degrees Celsius.
+
+A report is printed with the peak, average and minimum temperature, and the
+hottest region: the 4-connected set of grid tiles containing the peak tile
+whose temperature is within 10% of the temperature range (peak - min) of the
+peak. For a flat map the region is the whole die. The instances whose centers
+lie in the region are listed by decreasing power. The result is shown in the
+`Thermal` heat map of the GUI.
 
 ```tcl
 analyze_thermal
@@ -207,14 +228,20 @@ analyze_thermal
 | Switch Name | Description |
 | ----- | ----- |
 | `-hotspot` | Path to the HotSpot executable. Defaults to the `HOTSPOT` environment variable, then `hotspot` on `PATH`. |
-| `-hotspot_config` | HotSpot configuration file passed with `-c`. Defaults to built-in settings. |
-| `-grid_file` | Read an existing HotSpot `-grid_steady_file` instead of running HotSpot. |
-| `-work_dir` | Directory for the generated HotSpot inputs and outputs. Defaults to a temporary directory that is removed after the run. |
-| `-grid` | HotSpot grid rows and columns (powers of 2). The default is `64 64`. |
+| `-hotspot_config` | HotSpot configuration file passed with `-c`. The grid size and ambient/initial temperature are still set from `-grid` and `-ambient`. Defaults to a generated `hotspot.config` (see below). |
+| `-grid_file` | Read an existing HotSpot `-grid_steady_file` for a `-grid` sized grid over the die instead of running HotSpot. No HotSpot inputs are generated. |
+| `-work_dir` | Directory (created if needed) for the generated HotSpot inputs, outputs and `hotspot.log`. Defaults to a temporary directory that is removed after the run. |
+| `-grid` | HotSpot grid rows and columns (powers of 2, at most 1024 each). The default is `64 64`. |
 | `-ambient` | Ambient temperature in degrees Celsius. The default is 45. |
 | `-corner` | Corner used for power. Defaults to the command corner. |
 | `-max_instances` | Number of instances in the hottest region to report. The default is 10. |
-| `-report_file` | Write every instance in the hottest region to this file. |
+| `-report_file` | Write every instance in the hottest region (name, master, power) to this file. |
+
+The generated `hotspot.config` uses the HotSpot default chip, interface and
+package parameters, except that the heat spreader side is
+max(30 mm, die side) and the heat sink side is max(60 mm, 2 x spreader side),
+so the package is valid for any die size (HotSpot requires the spreader to be
+at least as large as the die and the sink at least as large as the spreader).
 
 ### Set Thermal Color Range
 
@@ -267,6 +294,10 @@ If you are a developer, you might find these useful. More details can be found i
 | Command Name | Description |
 | ----- | ----- |
 | `find_net` | Get a reference to net name. |
+| `psm::thermal_peak` | Peak temperature (degrees C) of the last `analyze_thermal` result. |
+| `psm::thermal_average` | Average temperature (degrees C) of the last `analyze_thermal` result. |
+| `psm::thermal_min` | Minimum temperature (degrees C) of the last `analyze_thermal` result. |
+| `psm::thermal_temperature_at x_um y_um` | Temperature (degrees C) of the grid tile containing the point, in microns. |
 
 ## Example scripts
 
@@ -288,6 +319,21 @@ Simply run the following script:
 ```
 
 ## Limitations
+
+Thermal analysis (`analyze_thermal`):
+
+- Steady state only; there is no transient analysis.
+- The floorplan uses uniform tiles, capped at 32 x 32, independent of the
+  actual placement structure; power is binned by area overlap.
+- The generated configuration uses the HotSpot default package model
+  (convection to ambient through interface, spreader and sink). Use
+  `-hotspot_config` for other packages.
+- Macros and other instances only dissipate power if they have Liberty power
+  or a `set_pdnsim_inst_power` value.
+- HotSpot writes grid temperatures with 0.01 K resolution, so low power
+  designs can produce a flat map.
+- Only the silicon layer (layer 0) of the grid file is used, which assumes the
+  HotSpot default layer stack.
 
 ## References
 

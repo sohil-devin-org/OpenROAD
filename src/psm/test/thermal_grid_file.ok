@@ -1,0 +1,39 @@
+[INFO ODB-0227] LEF file: sky130hd/sky130hd.tlef, created 13 layers, 25 vias
+[INFO ODB-0227] LEF file: sky130hd/sky130hd_std_cell.lef, created 437 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 538 components and 2577 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1076 connections.
+[INFO ODB-0133]     Created 475 nets and 1498 connections.
+[WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
+[INFO PSM-0205] Reading HotSpot grid temperatures from thermal_grid_file.grid.
+########## Thermal report ##########
+Design             : gcd
+Corner             : default
+Grid               : 4 x 4
+Ambient            : 45.00 C
+Total power        : 1.1379e-03 W
+Peak temperature   : 55.00 C
+Average temperature: 50.25 C
+Min temperature    : 47.00 C
+Hottest region     : (0.000, 0.000) - (43.420, 21.710) um
+Region tiles       : 2
+Region average     : 54.75 C
+Region instances   : 22
+Instance                                 Master                            Power (W)
+dpath.a_lt_b$in1\[2\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.3340e-05
+dpath.a_lt_b$in1\[1\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2349e-05
+dpath.a_lt_b$in0\[1\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_1         1.2298e-05
+dpath.a_lt_b$in0\[0\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2285e-05
+_711_                                    sky130_fd_sc_hd__xnor2_1         2.5985e-06
+####################################
+peak 55.00
+average 50.25
+min 47.00
+lower left 55.00
+lower right 49.50
+upper left 47.00
+upper right 48.50
+report file header: Instance	Master	Power (W)
+report file instances: 22
+report file first: dpath.a_lt_b$in1\[2\]$_DFFE_PP_	sky130_fd_sc_hd__dfxtp_2	1.3340e-05
