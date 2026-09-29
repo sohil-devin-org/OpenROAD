@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -133,25 +134,43 @@ std::vector<PowerTile> ThermalAnalyzer::buildTiles(
   if (tile_size <= 0 || bounds.dx() <= 0 || bounds.dy() <= 0) {
     return tiles;
   }
-  const int cols = (bounds.dx() + tile_size - 1) / tile_size;
-  const int rows = (bounds.dy() + tile_size - 1) / tile_size;
+  // Round the tile count so the tiles cover the die exactly (no sliver
+  // tiles at the far edges); tile edges are then die_size * i / count.
+  const int cols = std::max(
+      1, static_cast<int>(std::lround(bounds.dx() / double(tile_size))));
+  const int rows = std::max(
+      1, static_cast<int>(std::lround(bounds.dy() / double(tile_size))));
+  const auto x_edge = [&](int col) {
+    return bounds.xMin()
+           + static_cast<int>(static_cast<int64_t>(bounds.dx()) * col / cols);
+  };
+  const auto y_edge = [&](int row) {
+    return bounds.yMin()
+           + static_cast<int>(static_cast<int64_t>(bounds.dy()) * row / rows);
+  };
   tiles.reserve(static_cast<size_t>(rows) * cols);
   for (int row = 0; row < rows; row++) {
     for (int col = 0; col < cols; col++) {
       PowerTile tile;
       tile.name = "t" + std::to_string(row) + "_" + std::to_string(col);
-      const int x0 = bounds.xMin() + col * tile_size;
-      const int y0 = bounds.yMin() + row * tile_size;
-      tile.rect = odb::Rect(x0,
-                            y0,
-                            std::min(x0 + tile_size, bounds.xMax()),
-                            std::min(y0 + tile_size, bounds.yMax()));
+      tile.rect = odb::Rect(
+          x_edge(col), y_edge(row), x_edge(col + 1), y_edge(row + 1));
       tiles.push_back(tile);
     }
   }
 
   // Distribute each instance's power over the tiles it overlaps, weighted
   // by overlap area.
+  const auto col_at = [&](int x) {
+    const int64_t offset = x - bounds.xMin();
+    return static_cast<int>(
+        std::clamp<int64_t>(offset * cols / bounds.dx(), 0, cols - 1));
+  };
+  const auto row_at = [&](int y) {
+    const int64_t offset = y - bounds.yMin();
+    return static_cast<int>(
+        std::clamp<int64_t>(offset * rows / bounds.dy(), 0, rows - 1));
+  };
   for (const auto& [inst, power] : inst_power) {
     if (power <= 0.0) {
       continue;
@@ -161,23 +180,20 @@ std::vector<PowerTile> ThermalAnalyzer::buildTiles(
     if (clipped.area() == 0) {
       continue;
     }
-    const int col0
-        = std::clamp((clipped.xMin() - bounds.xMin()) / tile_size, 0, cols - 1);
-    const int col1 = std::clamp(
-        (clipped.xMax() - 1 - bounds.xMin()) / tile_size, 0, cols - 1);
-    const int row0
-        = std::clamp((clipped.yMin() - bounds.yMin()) / tile_size, 0, rows - 1);
-    const int row1 = std::clamp(
-        (clipped.yMax() - 1 - bounds.yMin()) / tile_size, 0, rows - 1);
+    const int col0 = std::max(0, col_at(clipped.xMin()) - 1);
+    const int col1 = std::min(cols - 1, col_at(clipped.xMax() - 1) + 1);
+    const int row0 = std::max(0, row_at(clipped.yMin()) - 1);
+    const int row1 = std::min(rows - 1, row_at(clipped.yMax() - 1) + 1);
     const double area = static_cast<double>(clipped.area());
     for (int row = row0; row <= row1; row++) {
       for (int col = col0; col <= col1; col++) {
         PowerTile& tile = tiles[row * cols + col];
+        if (!tile.rect.overlaps(clipped)) {
+          continue;
+        }
         const double overlap
             = static_cast<double>(tile.rect.intersect(clipped).area());
-        if (overlap > 0) {
-          tile.power_w += power * overlap / area;
-        }
+        tile.power_w += power * overlap / area;
       }
     }
   }

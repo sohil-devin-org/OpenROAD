@@ -44,7 +44,7 @@ analyze_thermal
 | ----- | ----- |
 | `-corner` | Corner to compute instance power for. Defaults to the command corner. |
 | `-hotspot_binary` | Path to the HotSpot executable. Defaults to `hotspot` found on `PATH`. |
-| `-hotspot_config` | HotSpot configuration file. Defaults to a built-in configuration derived from the HotSpot example config. |
+| `-hotspot_config` | HotSpot configuration file, used verbatim instead of the built-in one (derived from the HotSpot `example.config`: 150 um silicon die, copper spreader and a 60 mm heat sink with `-r_convec 0.1`). The grid size is always passed on the command line; `-ambient` is only applied to the built-in configuration, so set `-ambient`/`-init_temp` (Kelvin) in a custom file. |
 | `-work_dir` | Directory for the generated HotSpot inputs and outputs. Defaults to a temporary directory. |
 | `-keep_files` | Keep the generated HotSpot files. |
 | `-tile_size` | Size in microns of the square tiles instance power is binned into. Defaults to the die size divided by 32. |
@@ -105,11 +105,12 @@ gui::get_heatmap_double Temperature FixedMax
 
 ## Example scripts
 
-Example scripts demonstrating how to run thermal analysis on a sample design
-of `gcd` as follows:
+`./test/gcd_hotspot.tcl` runs HotSpot on the placed sky130hd `gcd` fixture
+and enables the `Temperature` heat map; it needs `hotspot` on `PATH` (or in
+the `HOTSPOT` environment variable):
 
 ```shell
-./test/gcd_hotspot.tcl
+cd test && HOTSPOT=/path/to/hotspot openroad -gui gcd_hotspot.tcl
 ```
 
 ## Regression tests
@@ -125,16 +126,26 @@ Simply run the following script:
 ## Limitations
 
 - Only steady-state analysis is supported; power is the OpenSTA static
-  (activity based) total power.
-- The whole die is modelled as a single silicon layer; macros and standard
-  cells are treated alike and package parameters come from the HotSpot
-  configuration.
+  (activity based) total power, so the result depends on the liberty,
+  parasitics (`estimate_parasitics`) and activity setup used for
+  `report_power`.
+- Instance power is binned into square tiles (die size / 32 by default), so
+  the temperature grid cannot resolve features smaller than a tile; the
+  whole die is modelled as a single silicon layer and macros and standard
+  cells are treated alike (a macro's liberty power is spread uniformly over
+  its area).
+- The package model dominates the absolute temperatures: the built-in
+  configuration is HotSpot's example desktop package, so sky130 designs with
+  tens or hundreds of milliwatts sit within about a degree of ambient. Use
+  `-hotspot_config` to describe the real package (spreader/sink size,
+  `-r_convec`).
 - HotSpot accepts at most 8192 floorplan units, so the number of power tiles
-  (`ceil(die_width / tile_size) * ceil(die_height / tile_size)`) must stay
+  (`round(die_width / tile_size) * round(die_height / tile_size)`) must stay
   below that; increase `-tile_size` for large dies.
-- HotSpot reports grid temperatures with two decimals, so small designs with
-  a few milliwatts of power show only a few tenths of a degree of spatial
-  variation over the ambient temperature.
+- HotSpot reports grid temperatures with two decimals, so designs with
+  less than a milliwatt (e.g. `gcd`) show only a few hundredths of a degree
+  of spatial variation; the heat map legend switches to two decimals when
+  the map spans less than a degree.
 - HotSpot runs as a separate process through `/bin/sh`; its output is kept in
   `<work_dir>/<block>.hotspot.log` and is only preserved with `-keep_files`
   or `-work_dir`.
