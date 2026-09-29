@@ -50,6 +50,29 @@ puts "has results: [thm::has_thermal_results]"
 puts "--- hotspot log"
 report_file [file join $work_dir gcd.hotspot.log]
 
+# HotSpot succeeding but writing a malformed grid (duplicate cell index).
+set bad_grid_hotspot [make_result_file bad_grid_hotspot.sh]
+set stream [open $bad_grid_hotspot w]
+puts $stream "#!/bin/sh"
+puts $stream "while \[ \$# -gt 0 \]; do"
+puts $stream "  if \[ \"\$1\" = -grid_steady_file \]; then out=\$2; fi"
+puts $stream "  shift"
+puts $stream "done"
+puts $stream "echo 'Layer 0:' > \"\$out\""
+puts $stream "i=0"
+puts $stream "while \[ \$i -lt 4 \]; do echo \"\$i\t318.15\" >> \"\$out\"; i=\$((i+1)); done"
+puts $stream "echo '1\t400.15' >> \"\$out\""
+close $stream
+file attributes $bad_grid_hotspot -permissions 0755
+# THM-0039 includes machine dependent paths.
+suppress_message THM 39
+catch { analyze_thermal -hotspot_binary $bad_grid_hotspot -work_dir $work_dir \
+  -grid_rows 2 -grid_cols 2 } msg
+puts $msg
+puts "has results: [thm::has_thermal_results]"
+puts "--- grid steady"
+report_file [file join $work_dir gcd.grid.steady]
+
 # Missing HotSpot config file.
 catch { analyze_thermal -hotspot_binary $fail_hotspot \
   -hotspot_config /no/such/hotspot.config } msg
