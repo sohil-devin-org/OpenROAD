@@ -18,6 +18,8 @@ TESTS = [
     "density01",
     "diverge01",
     "error01",
+    "physics-errors",
+    "physics01",
     "incremental01",
     "mbff_hier",
     "mbff_orig_name",

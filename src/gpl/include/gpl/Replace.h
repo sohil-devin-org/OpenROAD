@@ -38,6 +38,7 @@ class NesterovBase;
 class RouteBase;
 class TimingBase;
 class ClockBase;
+class PhysicsModel;
 
 class InitialPlace;
 class NesterovPlace;
@@ -131,6 +132,22 @@ struct PlaceOptions
   // Concurrent IO pin + cell placement
   bool placeIosMode = false;
 
+  // Physics-driven placement (opt-in): adds a screened-Poisson thermal
+  // spreading force fed by per-instance power and runs periodic
+  // power/thermal/IR-drop/timing checkpoints through a PhysicsModel.
+  bool physicsDrivenMode = false;
+  // Magnitude of the physics force relative to the wirelength gradient.
+  float physicsWeight = 0.3;
+  // Nesterov iterations between full physics checkpoints.
+  int physicsCheckpointInterval = 50;
+  // Nesterov iterations between refreshes of the spreading potential.
+  int physicsFieldInterval = 5;
+  // The force is applied once the overflow drops below this value.
+  float physicsStartOverflow = 0.9;
+  // Resolution of the spreading potential grid over the core.
+  int physicsGridX = 64;
+  int physicsGridY = 64;
+
   void skipIo();
   void validate(utl::Logger* log);
 };
@@ -152,6 +169,10 @@ class Replace
   // Note: no ownership is transfered as the object will create a new
   // graphics object of the same class.
   void setGraphicsInterface(const gpl::AbstractGraphics& graphics);
+
+  // Physics engine used by -physics_driven (not owned).
+  void setPhysicsModel(PhysicsModel* physics) { physics_ = physics; }
+  PhysicsModel* getPhysicsModel() const { return physics_; }
 
   void reset();
 
@@ -203,6 +224,7 @@ class Replace
   utl::Logger* log_ = nullptr;
 
   std::unique_ptr<AbstractGraphics> graphics_;
+  PhysicsModel* physics_ = nullptr;
 
   std::shared_ptr<PlacerBaseCommon> pbc_;
   std::shared_ptr<NesterovBaseCommon> nbc_;

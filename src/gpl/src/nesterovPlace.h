@@ -31,6 +31,8 @@ class Instance;
 class RouteBase;
 class TimingBase;
 class ClockBase;
+class PhysicsModel;
+struct PhysicsCheckpointResult;
 
 class NesterovPlace
 {
@@ -64,6 +66,7 @@ class NesterovPlace
   NesterovPlaceVars& getNpVars() { return npVars_; }
 
   void setTargetOverflow(float overflow) { npVars_.targetOverflow = overflow; }
+  void setPhysicsModel(PhysicsModel* physics) { physics_ = physics; }
   void setMaxIters(int limit) { npVars_.maxNesterovIter = limit; }
 
   void npUpdatePrevGradient(const std::shared_ptr<NesterovBase>& nb);
@@ -120,6 +123,11 @@ class NesterovPlace
   bool isPlacementSettled() const;
 
   bool isConverged(int gpl_iter_count, int routability_gpl_iter_count);
+  // Physics-driven placement: refresh the spreading potential and run the
+  // periodic power/thermal/IR/timing checkpoints.
+  void runPhysics(int iter);
+  void runPhysicsCheckpoint(int iter, const std::string& label);
+  void finishPhysics(int iter);
   // The top-level (unfenced/full-die) region is always nbVec_[0].
   NesterovBase* getTopLevelNB() const;
   std::string getReportsDir() const;
@@ -180,6 +188,14 @@ class NesterovPlace
 
   int placement_gif_key_ = -1;
   int routability_gif_key_ = -1;
+
+  PhysicsModel* physics_ = nullptr;
+  int physics_checkpoint_count_ = 0;
+  bool physics_force_active_ = false;
+  double physics_first_peak_c_ = 0;
+  double physics_last_peak_c_ = 0;
+  double physics_first_wns_s_ = 0;
+  double physics_last_wns_s_ = 0;
 
   void init();
   void reset();
