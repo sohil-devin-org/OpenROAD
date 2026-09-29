@@ -11,7 +11,6 @@ or_integration_tests(
     thermal_config_errors
     thermal_map_gcd
     physics_flow_gcd
-||||||| 38f8cad695
     characterize_libraries_nangate45
 )
 
