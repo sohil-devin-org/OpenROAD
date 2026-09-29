@@ -4,12 +4,15 @@
 source "helpers.tcl"
 define_corners fast typ slow
 read_lef Nangate45/Nangate45.lef
+read_def Nangate45_data/gcd.def
 read_liberty -corner fast Nangate45/Nangate45_fast.lib
 read_liberty -corner typ Nangate45/Nangate45_typ.lib
 read_liberty -corner slow Nangate45/Nangate45_slow.lib
-read_def Nangate45_data/gcd.def
 read_sdc Nangate45_data/gcd.sdc
 
+# The fit-file paths in THM-0082/0085 are run dependent.
+suppress_message THM 82
+suppress_message THM 85
 set leakage_json [make_result_file characterize_libraries_nangate45_leakage.json]
 set derate_json [make_result_file characterize_libraries_nangate45_derate.json]
 characterize_thermal_libraries -leakage_json $leakage_json \

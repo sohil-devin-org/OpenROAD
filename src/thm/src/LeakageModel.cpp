@@ -458,6 +458,37 @@ bool staNominal(sta::dbSta* sta, double& temp_c, double& vdd_v)
   return true;
 }
 
+// Nominal (T, V) point of the characterization: the typical-process corner
+// when the corners carry process tags, otherwise the STA command corner.
+void nominalPoint(const std::vector<ResolvedCorner>& resolved,
+                  sta::dbSta* sta,
+                  double& temp_c,
+                  double& vdd_v)
+{
+  for (const ResolvedCorner& rc : resolved) {
+    if (rc.corner.process.rfind("tt", 0) == 0) {
+      temp_c = rc.corner.temperature_c;
+      vdd_v = rc.corner.voltage_v;
+      return;
+    }
+  }
+  staNominal(sta, temp_c, vdd_v);
+}
+
+// Temperature range spanned by the corners (0..0 without corners).
+void temperatureRange(const std::vector<ResolvedCorner>& resolved,
+                      double& t_min_c,
+                      double& t_max_c)
+{
+  t_min_c = 0.0;
+  t_max_c = 0.0;
+  for (size_t i = 0; i < resolved.size(); ++i) {
+    const double t = resolved[i].corner.temperature_c;
+    t_min_c = i == 0 ? t : std::min(t_min_c, t);
+    t_max_c = i == 0 ? t : std::max(t_max_c, t);
+  }
+}
+
 // Relative sensitivity (fraction per unit of x) of the samples around the
 // reference sample x_ref: least squares of (y/y_ref - 1) = s * (x - x_ref)
 // through the origin, so that the factor is exactly 1 at x_ref.  Returns
@@ -706,10 +737,9 @@ int LeakageModel::fitFromLibraries(const std::vector<LibraryCorner>& corners,
 {
   corners_ = corners;
   fits_.clear();
-  t_min_c_ = 0.0;
-  t_max_c_ = 0.0;
   const std::vector<ResolvedCorner> resolved
       = resolveCorners(corners, sta, logger_);
+  temperatureRange(resolved, t_min_c_, t_max_c_);
   const std::vector<CornerGroup> groups
       = groupCorners(resolved, /*vary_temperature=*/true);
   if (groups.empty()) {
@@ -741,7 +771,7 @@ int LeakageModel::fitFromLibraries(const std::vector<LibraryCorner>& corners,
   t_max_c_ = group.distinct.back();
   double t_nom = 25.0;
   double v_nom = 0.0;
-  staNominal(sta, t_nom, v_nom);
+  nominalPoint(resolved, sta, t_nom, v_nom);
   const double t_ref = closest(group.distinct, t_nom);
 
   const std::map<std::string, Samples> samples = collectSamples(
@@ -969,10 +999,9 @@ int DerateModel::fitFromLibraries(const std::vector<LibraryCorner>& corners,
   volt_points_.clear();
   cell_temp_sens_per_c_.clear();
   cell_volt_sens_per_v_.clear();
-  t_min_c_ = 0.0;
-  t_max_c_ = 0.0;
   const std::vector<ResolvedCorner> resolved
       = resolveCorners(corners, sta, logger_);
+  temperatureRange(resolved, t_min_c_, t_max_c_);
   const std::vector<CornerGroup> temp_groups
       = groupCorners(resolved, /*vary_temperature=*/true);
   const std::vector<CornerGroup> volt_groups
@@ -981,7 +1010,7 @@ int DerateModel::fitFromLibraries(const std::vector<LibraryCorner>& corners,
   // Nominal point: the STA library corner, snapped onto the fitted sweeps.
   double t_nom = t_nom_c_;
   double v_nom = v_nom_v_;
-  staNominal(sta, t_nom, v_nom);
+  nominalPoint(resolved, sta, t_nom, v_nom);
   if (!temp_groups.empty()) {
     t_nom = closest(temp_groups.front().distinct, t_nom);
     v_nom = temp_groups.front().fixed_value;
