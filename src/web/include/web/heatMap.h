@@ -57,6 +57,16 @@ class HeatMapDataSource
     std::function<const std::string()> getter;
     std::function<void(const std::string&)> setter;
   };
+  struct MapSettingDouble
+  {
+    std::string name;
+    std::string label;
+    double minimum;
+    double maximum;
+    double step;
+    std::function<double()> getter;
+    std::function<void(double)> setter;
+  };
 
   struct MapColor
   {
@@ -68,7 +78,8 @@ class HeatMapDataSource
 
   using Map = boost::multi_array<std::shared_ptr<MapColor>, 2>;
   using MapView = Map::array_view<2>::type;
-  using MapSetting = std::variant<MapSettingBoolean, MapSettingMultiChoice>;
+  using MapSetting = std::
+      variant<MapSettingBoolean, MapSettingMultiChoice, MapSettingDouble>;
 
   HeatMapDataSource(utl::Logger* logger,
                     const std::string& name,
@@ -200,6 +211,13 @@ class HeatMapDataSource
       const std::function<std::vector<std::string>()>& choices,
       const std::function<std::string()>& getter,
       const std::function<void(std::string)>& setter);
+  void addDoubleSetting(const std::string& name,
+                        const std::string& label,
+                        double minimum,
+                        double maximum,
+                        double step,
+                        const std::function<double()>& getter,
+                        const std::function<void(double)>& setter);
 
   bool setupMap();
   void clearMap();

@@ -1584,7 +1584,7 @@ export function populateDisplayControls(app, visibility, selectability,
         parent.appendChild(row);
     }
 
-    function addNumber(parent, label, value, step, onChange) {
+    function addNumber(parent, label, value, step, onChange, bounds) {
         const row = document.createElement('label');
         row.className = 'heatmap-setting';
         const text = document.createElement('span');
@@ -1593,6 +1593,12 @@ export function populateDisplayControls(app, visibility, selectability,
         input.type = 'number';
         input.value = String(value);
         input.step = String(step || 1);
+        if (bounds && Number.isFinite(bounds.min)) {
+            input.min = String(bounds.min);
+        }
+        if (bounds && Number.isFinite(bounds.max)) {
+            input.max = String(bounds.max);
+        }
         input.addEventListener('change', () => onChange(parseFloat(input.value)));
         row.appendChild(text);
         row.appendChild(input);
@@ -1835,6 +1841,16 @@ export function populateDisplayControls(app, visibility, selectability,
                                   value,
                               });
                           });
+            } else if (option.type === 'double') {
+                addNumber(settings, option.label, option.value, option.step,
+                          value => {
+                              sendHeatMapUpdate({
+                                  type: 'set_heatmap',
+                                  name: active.name,
+                                  option: option.name,
+                                  value,
+                              });
+                          }, {min: option.min, max: option.max});
             }
         }
 

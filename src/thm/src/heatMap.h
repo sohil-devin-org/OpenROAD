@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "odb/geom.h"
 #include "web/heatMap.h"
 
 namespace thm {
@@ -12,6 +13,7 @@ namespace thm {
 class ThermalAnalyzer;
 
 // GUI heat map of the HotSpot temperature grid in absolute degrees Celsius.
+// The map cells are exactly the temperature grid cells (no adjustable grid).
 // Unlike the other real valued maps the colour range can be pinned to a fixed
 // [min, max] so different designs are directly comparable.
 class TemperatureDataSource : public web::RealValueHeatMapDataSource
@@ -23,12 +25,18 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
   std::string formatValue(double value, bool legend) const override;
   double getDisplayRangeIncrement() const override;
 
-  // Fixed colour range (°C); disabled by default.
-  void setFixedRange(bool enabled) { fixed_range_ = enabled; }
+  bool canAdjustGrid() const override { return false; }
+  double getGridXSize() const override;
+  double getGridYSize() const override;
+  odb::Rect getBounds() const override;
+
+  // Fixed colour range (°C); disabled by default.  Values outside the range
+  // are clamped to the end colours.
+  void setFixedRange(bool enabled);
   bool getFixedRange() const { return fixed_range_; }
-  void setFixedMin(double value) { fixed_min_ = value; }
+  void setFixedMin(double value);
   double getFixedMin() const { return fixed_min_; }
-  void setFixedMax(double value) { fixed_max_ = value; }
+  void setFixedMax(double value);
   double getFixedMax() const { return fixed_max_; }
 
  protected:
@@ -39,10 +47,14 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
                       double data_area,
                       double intersection_area,
                       double rect_area) override;
+  void correctMapScale(HeatMapDataSource::Map& map) override;
   void determineMinMax(const HeatMapDataSource::Map& map) override;
+  void populateXYGrid() override;
   bool destroyMapOnNotVisible() const override { return false; }
 
  private:
+  bool hasGrid() const;
+
   ThermalAnalyzer* analyzer_;
   bool fixed_range_ = false;
   double fixed_min_ = 25.0;

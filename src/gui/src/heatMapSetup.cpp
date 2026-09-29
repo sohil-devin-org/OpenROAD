@@ -60,6 +60,10 @@ HeatMapSetup::HeatMapSetup(web::HeatMapDataSource& source,
       addMultiChoiceOption(
           form,
           std::get<web::HeatMapDataSource::MapSettingMultiChoice>(option));
+    } else if (std::holds_alternative<web::HeatMapDataSource::MapSettingDouble>(
+                   option)) {
+      addDoubleOption(
+          form, std::get<web::HeatMapDataSource::MapSettingDouble>(option));
     }
   }
 
@@ -355,7 +359,8 @@ void HeatMapSetup::addBooleanOption(
       check_box, &QCheckBox::stateChanged, [this, option](int value) {
         option.setter(value == Qt::Checked);
         destroyMap();
-        source_.redraw();
+        source_.ensureMap();
+        emit changed();
       });
 }
 
@@ -377,6 +382,27 @@ void HeatMapSetup::addMultiChoiceOption(
                      option.setter(value.toStdString());
                      destroyMap();
                      source_.redraw();
+                   });
+}
+
+void HeatMapSetup::addDoubleOption(
+    QFormLayout* layout,
+    const web::HeatMapDataSource::MapSettingDouble& option)
+{
+  QDoubleSpinBox* spin_box = new QDoubleSpinBox(this);
+  spin_box->setRange(option.minimum, option.maximum);
+  spin_box->setSingleStep(option.step);
+  spin_box->setValue(option.getter());
+
+  layout->addRow(QString::fromStdString(option.label), spin_box);
+
+  QObject::connect(spin_box,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   [this, option](double value) {
+                     option.setter(value);
+                     destroyMap();
+                     source_.ensureMap();
+                     emit changed();
                    });
 }
 

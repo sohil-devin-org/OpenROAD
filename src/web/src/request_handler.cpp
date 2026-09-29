@@ -1304,6 +1304,17 @@ static boost::json::object serializeHeatMapOption(
     o["name"] = setting.name;
     o["label"] = setting.label;
     o["value"] = setting.getter();
+  } else if (std::holds_alternative<web::HeatMapDataSource::MapSettingDouble>(
+                 option)) {
+    const auto& setting
+        = std::get<web::HeatMapDataSource::MapSettingDouble>(option);
+    o["type"] = "double";
+    o["name"] = setting.name;
+    o["label"] = setting.label;
+    o["value"] = setting.getter();
+    o["min"] = setting.minimum;
+    o["max"] = setting.maximum;
+    o["step"] = setting.step;
   } else {
     const auto& setting
         = std::get<web::HeatMapDataSource::MapSettingMultiChoice>(option);
