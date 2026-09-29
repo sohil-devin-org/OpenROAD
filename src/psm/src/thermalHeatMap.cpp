@@ -3,6 +3,8 @@
 
 #include "thermalHeatMap.h"
 
+#include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -44,6 +46,54 @@ std::string ThermalDataSource::formatValue(const double value,
     text += " " + getValueUnits();
   }
   return text;
+}
+
+double ThermalDataSource::getTemperatureRange() const
+{
+  const double range = getMaxValue() - getMinValue();
+  return range == 0.0 ? 1.0 : range;
+}
+
+double ThermalDataSource::convertValueToPercent(const double value) const
+{
+  return 100.0 * (value - getMinValue()) / getTemperatureRange();
+}
+
+double ThermalDataSource::convertPercentToValue(const double percent) const
+{
+  return percent * getTemperatureRange() / 100.0 + getMinValue();
+}
+
+double ThermalDataSource::getGridXSize() const
+{
+  const ThermalGrid& grid = psm_->getThermalGrid();
+  if (grid.empty() || getBlock() == nullptr) {
+    return RealValueHeatMapDataSource::getGridXSize();
+  }
+  int min_width = grid.getBounds().dx();
+  for (int col = 0; col < grid.getCols(); col++) {
+    const int width = grid.getTileRect(0, col).dx();
+    if (width > 0) {
+      min_width = std::min(min_width, width);
+    }
+  }
+  return min_width / getDbuPerMicron();
+}
+
+double ThermalDataSource::getGridYSize() const
+{
+  const ThermalGrid& grid = psm_->getThermalGrid();
+  if (grid.empty() || getBlock() == nullptr) {
+    return RealValueHeatMapDataSource::getGridYSize();
+  }
+  int min_height = grid.getBounds().dy();
+  for (int row = 0; row < grid.getRows(); row++) {
+    const int height = grid.getTileRect(row, 0).dy();
+    if (height > 0) {
+      min_height = std::min(min_height, height);
+    }
+  }
+  return min_height / getDbuPerMicron();
 }
 
 void ThermalDataSource::populateXYGrid()
@@ -125,9 +175,19 @@ void ThermalDataSource::determineMinMax(const HeatMapDataSource::Map& map)
     setMinValue(range->first);
     setMaxValue(range->second);
   } else {
-    const ThermalGrid& grid = psm_->getThermalGrid();
-    setMinValue(grid.getMin());
-    setMaxValue(grid.getMax());
+    double min_value = std::numeric_limits<double>::max();
+    double max_value = std::numeric_limits<double>::lowest();
+    for (const auto& map_col : map) {
+      for (const auto& map_pt : map_col) {
+        if (!map_pt->has_value) {
+          continue;
+        }
+        min_value = std::min(min_value, map_pt->value);
+        max_value = std::max(max_value, map_pt->value);
+      }
+    }
+    setMinValue(min_value);
+    setMaxValue(max_value);
   }
 
   debugPrint(logger_,

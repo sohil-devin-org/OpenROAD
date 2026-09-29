@@ -34,6 +34,10 @@ class ThermalDataSource : public web::RealValueHeatMapDataSource
   bool canAdjustGrid() const override { return false; }
   odb::Rect getBounds() const override;
   std::string formatValue(double value, bool legend) const override;
+  double convertValueToPercent(double value) const override;
+  double convertPercentToValue(double percent) const override;
+  double getGridXSize() const override;
+  double getGridYSize() const override;
 
  protected:
   bool populateMap() override;
@@ -48,6 +52,8 @@ class ThermalDataSource : public web::RealValueHeatMapDataSource
   void determineMinMax(const web::HeatMapDataSource::Map& map) override;
 
  private:
+  double getTemperatureRange() const;
+
   PDNSim* psm_;
   utl::Logger* logger_;
 };

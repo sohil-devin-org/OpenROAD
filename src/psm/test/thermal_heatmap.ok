@@ -5,6 +5,24 @@
 [INFO ODB-0132]     Created 2 special nets and 1248 connections.
 [INFO ODB-0133]     Created 581 nets and 1504 connections.
 [ERROR WEB-0099] "Thermal" is not populated with data.
+[INFO PSM-0205] Reading HotSpot grid temperatures from thermal_heatmap.grid.steady.
+########## Thermal report ##########
+Design             : gcd
+Corner             : default
+Grid               : 8 x 8
+Ambient            : 45.00 C
+Total power        : 1.3841e-04 W
+Peak temperature   : 85.00 C
+Average temperature: 50.65 C
+Min temperature    : 45.00 C
+Hottest region     : (87.614, 0.000) - (100.130, 12.600) um
+Region tiles       : 1
+Region average     : 85.00 C
+Region instances   : 2
+Instance                                 Master                            Power (W)
+buffer1                                  CLKBUF_X1                        3.4410e-08
+PHY_1                                    FILLCELL_X1                      0.0000e+00
+####################################
 [DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, auto color range 45.00 - 85.00 °C
 No differences found.
 [DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, fixed color range 50.00 - 70.00 °C
