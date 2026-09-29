@@ -102,6 +102,9 @@ struct AnimationOptions
   int width_px = 800;
   int die = -1;
   std::string title;
+  // Upper bound on rendered frames; longer histories are subsampled evenly
+  // (first and last snapshot always kept).  <= 0 disables the limit.
+  int max_frames = 200;
 };
 
 // Physics analysis engine: thermal grid and solvers, temperature-dependent

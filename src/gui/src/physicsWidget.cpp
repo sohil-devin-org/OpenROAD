@@ -325,12 +325,12 @@ void PhysicsWidget::updateMetrics(const thm::PhysicsMetrics& metrics,
   const int dies
       = std::max(metrics.peak_temp_c.size(), metrics.avg_temp_c.size());
   for (int die = 0; die < dies; ++die) {
-    const QString suffix = dies > 1 ? QString(" die %1").arg(die) : "";
-    if (die < metrics.peak_temp_c.size()) {
+    const QString suffix = dies > 1 ? QString(" die %1").arg(die) : QString();
+    if (die < static_cast<int>(metrics.peak_temp_c.size())) {
       rows.emplace_back("Peak temperature (C)" + suffix,
                         fixed(metrics.peak_temp_c[die]));
     }
-    if (die < metrics.avg_temp_c.size()) {
+    if (die < static_cast<int>(metrics.avg_temp_c.size())) {
       rows.emplace_back("Average temperature (C)" + suffix,
                         fixed(metrics.avg_temp_c[die]));
     }
@@ -360,8 +360,8 @@ void PhysicsWidget::updateMetrics(const thm::PhysicsMetrics& metrics,
   rows.emplace_back("Clock skew delta (ps)",
                     fixed(metrics.clock_skew_delta_s * 1e12, 2));
 
-  metrics_table_->setRowCount(rows.size());
-  for (int row = 0; row < rows.size(); ++row) {
+  metrics_table_->setRowCount(static_cast<int>(rows.size()));
+  for (int row = 0; row < static_cast<int>(rows.size()); ++row) {
     metrics_table_->setItem(row, 0, readOnlyItem(rows[row].first));
     metrics_table_->setItem(row, 1, readOnlyItem(rows[row].second));
   }

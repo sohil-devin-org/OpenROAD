@@ -627,8 +627,9 @@ python3 etc/find_messages.py -d src/thm > src/thm/messages.txt
 - Activity files of transient phases (`-phase {name scale duration file}`)
   are stored but only the global `-activity_file` is applied during
   `analyze_thermal`.
-- `write_physics_animation` is a stub that warns and produces no output
-  (THM-0090); the flow scripts tolerate this.
+- `write_physics_animation -format mp4` needs `ffmpeg` on `PATH`; without it
+  a GIF is written instead.  Histories longer than 200 snapshots are
+  subsampled evenly to keep the animation small.
 - The thermal clock-skew delta is the difference of the worst STA skew with
   and without derates, not a clock-tree-aware thermal skew model.
 - The second die of a two-die stack is modeled with a uniform or mirrored

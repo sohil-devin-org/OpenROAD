@@ -527,6 +527,19 @@ void drawMap(Canvas& canvas,
   drawText(canvas, x0, y0 + h + 4, panel.caption, kBlack);
 }
 
+// Legend label with enough digits to distinguish the ends of narrow ranges.
+std::string temperatureLabel(double value, double min_c, double max_c)
+{
+  const double range = max_c - min_c;
+  if (range >= 5.0) {
+    return format("%.1f C", value);
+  }
+  if (range >= 0.5) {
+    return format("%.2f C", value);
+  }
+  return format("%.3f C", value);
+}
+
 void drawColorBar(Canvas& canvas,
                   const Layout& layout,
                   double min_c,
@@ -545,14 +558,17 @@ void drawColorBar(Canvas& canvas,
   }
   canvas.drawRect(x0 - 1, y0 - 1, Layout::kColorBarWidth + 2, h + 2, kBlack);
   const int label_x = x0 + Layout::kColorBarWidth + 4;
-  drawText(canvas, label_x, y0, format("%.1f C", max_c), kBlack);
+  drawText(canvas, label_x, y0, temperatureLabel(max_c, min_c, max_c), kBlack);
   drawText(canvas,
            label_x,
            y0 + h / 2 - kGlyphHeight / 2,
-           format("%.1f C", (min_c + max_c) / 2),
+           temperatureLabel((min_c + max_c) / 2, min_c, max_c),
            kBlack);
-  drawText(
-      canvas, label_x, y0 + h - kGlyphHeight, format("%.1f C", min_c), kBlack);
+  drawText(canvas,
+           label_x,
+           y0 + h - kGlyphHeight,
+           temperatureLabel(min_c, min_c, max_c),
+           kBlack);
 }
 
 Canvas renderFrame(const Layout& layout,
@@ -569,7 +585,7 @@ Canvas renderFrame(const Layout& layout,
            kBlack,
            Layout::kTitleScale);
   for (size_t i = 0; i < frame.panels.size(); ++i) {
-    drawMap(canvas, layout, i, frame.panels[i], min_c, max_c);
+    drawMap(canvas, layout, static_cast<int>(i), frame.panels[i], min_c, max_c);
   }
   drawColorBar(canvas, layout, min_c, max_c);
   drawText(canvas,
@@ -661,6 +677,7 @@ Panel makePanel(const PhysicsSnapshot& snap, int die, bool draw_cells)
 std::vector<const PhysicsSnapshot*> selectSnapshots(
     const PhysicsHistory& history,
     AnimationType type,
+    int max_frames,
     utl::Logger* logger)
 {
   std::vector<const PhysicsSnapshot*> steady;
@@ -696,6 +713,20 @@ std::vector<const PhysicsSnapshot*> selectSnapshots(
       selected.push_back(&snap);
     }
   }
+  if (max_frames > 1 && static_cast<int>(selected.size()) > max_frames) {
+    std::vector<const PhysicsSnapshot*> sampled;
+    sampled.reserve(max_frames);
+    const size_t last = selected.size() - 1;
+    for (int i = 0; i < max_frames; ++i) {
+      sampled.push_back(selected[i * last / (max_frames - 1)]);
+    }
+    logger->info(utl::THM,
+                 167,
+                 "Subsampled {} snapshots to {} animation frames.",
+                 selected.size(),
+                 max_frames);
+    selected = std::move(sampled);
+  }
   return selected;
 }
 
@@ -706,7 +737,7 @@ std::vector<Frame> buildFrames(const PhysicsHistory& history,
 {
   const int die = std::max(0, options.die);
   const std::vector<const PhysicsSnapshot*> snapshots
-      = selectSnapshots(history, options.type, logger);
+      = selectSnapshots(history, options.type, options.max_frames, logger);
   std::vector<Frame> frames;
   switch (options.type) {
     case AnimationType::kCooldown:
@@ -729,8 +760,8 @@ std::vector<Frame> buildFrames(const PhysicsHistory& history,
                      "(load_physics_reference); nothing was written.");
         return frames;
       }
-      const std::vector<const PhysicsSnapshot*> ref_snapshots
-          = selectSnapshots(*reference, options.type, logger);
+      const std::vector<const PhysicsSnapshot*> ref_snapshots = selectSnapshots(
+          *reference, options.type, options.max_frames, logger);
       const size_t count = std::max(snapshots.size(), ref_snapshots.size());
       for (size_t i = 0; i < count; ++i) {
         const PhysicsSnapshot& snap
@@ -915,8 +946,10 @@ bool writeAnimation(const PhysicsHistory& history,
   double min_c;
   double max_c;
   determineScale(frames, options, min_c, max_c);
-  const Layout layout = makeLayout(
-      options.width_px, frames.front().panels.size(), dieAspect(frames));
+  const Layout layout
+      = makeLayout(options.width_px,
+                   static_cast<int>(frames.front().panels.size()),
+                   dieAspect(frames));
   const std::string title = makeTitle(history, options);
 
   std::filesystem::path output(options.file);

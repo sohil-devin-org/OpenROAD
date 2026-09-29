@@ -11,7 +11,7 @@
 # Outputs go to $THM_DEMO_OUT (default: src/thm/test/flow/results).
 #
 # This script is not part of the regression suite: placement and IR-drop
-# runtimes and the animation stub make the log non-deterministic.
+# runtimes make the log non-deterministic.
 
 set flow_dir [file dirname [file normalize [info script]]]
 set test_dir [file dirname $flow_dir]

@@ -6,9 +6,11 @@ read_def Nangate45_data/gcd.def
 read_liberty Nangate45/Nangate45_typ.lib
 read_sdc Nangate45_data/gcd.sdc
 
-set_thermal_config -grid {8 8} -no_ir_drop \
-  -phase {burst 3.0 0.005} \
-  -phase {idle 0.2 0.02}
+# Two activity phases: a burst followed by an idle cool-down.  The gcd die is
+# tiny, so its thermal time constant is well below a microsecond; the phase
+# durations are chosen to yield a few hundred transient checkpoints.
+set_thermal_config -grid {8 8} -no_ir_drop -phase {burst 3.0 2e-6}
+set_thermal_config -phase {idle 0.2 5e-6}
 analyze_thermal -transient
 
 proc check_gif { file } {
