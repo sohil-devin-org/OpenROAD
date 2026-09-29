@@ -375,6 +375,19 @@ void HeatMapDataSource::addMultipleChoiceSetting(
       MapSettingMultiChoice{name, label, choices, getter, setter});
 }
 
+void HeatMapDataSource::addDoubleSetting(
+    const std::string& name,
+    const std::string& label,
+    double minimum,
+    double maximum,
+    double step,
+    const std::function<double()>& getter,
+    const std::function<void(double)>& setter)
+{
+  settings_.emplace_back(
+      MapSettingDouble{name, label, minimum, maximum, step, getter, setter});
+}
+
 Renderer::Settings HeatMapDataSource::getSettings() const
 {
   Renderer::Settings settings{{"DisplayMin", display_range_min_},
@@ -396,6 +409,9 @@ Renderer::Settings HeatMapDataSource::getSettings() const
       settings[set.name] = set.getter();
     } else if (std::holds_alternative<MapSettingMultiChoice>(setting)) {
       const auto& set = std::get<MapSettingMultiChoice>(setting);
+      settings[set.name] = set.getter();
+    } else if (std::holds_alternative<MapSettingDouble>(setting)) {
+      const auto& set = std::get<MapSettingDouble>(setting);
       settings[set.name] = set.getter();
     }
   }
@@ -431,6 +447,11 @@ void HeatMapDataSource::setSettings(const Renderer::Settings& settings)
       std::string temp_value = set.getter();
       Renderer::setSetting<std::string>(settings, set.name, temp_value);
       set.setter(temp_value);
+    } else if (std::holds_alternative<MapSettingDouble>(setting)) {
+      const auto& set = std::get<MapSettingDouble>(setting);
+      double temp_value = set.getter();
+      Renderer::setSetting<double>(settings, set.name, temp_value);
+      set.setter(std::clamp(temp_value, set.minimum, set.maximum));
     }
   }
 

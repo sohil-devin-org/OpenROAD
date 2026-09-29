@@ -85,6 +85,8 @@
 #include "syn/synthesis.h"
 #include "tap/MakeTapcell.h"
 #include "tap/tapcell.h"
+#include "thm/MakeThermal.h"
+#include "thm/Thermal.h"
 #include "upf/MakeUpf.h"
 #include "utl/Logger.h"
 #include "utl/MakeLogger.h"
@@ -145,6 +147,7 @@ OpenRoad::~OpenRoad()
   delete web_server_;
   delete replace_;
   delete pdnsim_;
+  delete thermal_;
   delete finale_;
   delete ram_gen_;
   delete antenna_checker_;
@@ -264,6 +267,7 @@ void OpenRoad::init(Tcl_Interp* tcl_interp,
 
   replace_ = new gpl::Replace(db_, sta_, resizer_, global_router_, logger_);
   pdnsim_ = new psm::PDNSim(logger_, db_, sta_, estimate_parasitics_, opendp_);
+  thermal_ = new thm::ThermalAnalyzer(db_, sta_, logger_);
   pdngen_ = new pdn::PdnGen(db_, logger_);
   ram_gen_ = new ram::RamGen(getDbNetwork(),
                              db_,
@@ -312,6 +316,7 @@ void OpenRoad::init(Tcl_Interp* tcl_interp,
   cgt::initClockGating(tcl_interp);
   drt::initTcl(tcl_interp);
   psm::initPDNSim(tcl_interp);
+  thm::initThermal(tcl_interp);
   ant::initAntennaChecker(tcl_interp);
   par::initPartitionMgr(tcl_interp);
   pdn::initPdnGen(tcl_interp);

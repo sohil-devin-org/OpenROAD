@@ -69,6 +69,8 @@ entries:
       entries:
       - file: main/src/psm/doc/Vsrc_description
         title: VSRC Description
+    - file: main/src/thm/README
+      title: Thermal Analysis
   - file: main/src/gpl/README
     title: Global Placement
   - file: main/src/sta/README

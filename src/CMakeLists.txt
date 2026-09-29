@@ -275,6 +275,7 @@ add_subdirectory(grt)
 add_subdirectory(tap)
 add_subdirectory(rcx)
 add_subdirectory(psm)
+add_subdirectory(thm)
 add_subdirectory(ant)
 add_subdirectory(gui)
 add_subdirectory(drt)
@@ -350,6 +351,7 @@ target_link_libraries(openroad
   drt
   dst
   psm
+  thm
   ant
   upf
   utl

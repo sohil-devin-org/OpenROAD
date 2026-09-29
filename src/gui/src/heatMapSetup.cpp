@@ -5,6 +5,7 @@
 
 #include <QComboBox>
 #include <QDialog>
+#include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
@@ -12,6 +13,8 @@
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <variant>
 
@@ -60,6 +63,10 @@ HeatMapSetup::HeatMapSetup(web::HeatMapDataSource& source,
       addMultiChoiceOption(
           form,
           std::get<web::HeatMapDataSource::MapSettingMultiChoice>(option));
+    } else if (std::holds_alternative<web::HeatMapDataSource::MapSettingDouble>(
+                   option)) {
+      addDoubleOption(
+          form, std::get<web::HeatMapDataSource::MapSettingDouble>(option));
     }
   }
 
@@ -355,7 +362,8 @@ void HeatMapSetup::addBooleanOption(
       check_box, &QCheckBox::stateChanged, [this, option](int value) {
         option.setter(value == Qt::Checked);
         destroyMap();
-        source_.redraw();
+        source_.ensureMap();
+        emit changed();
       });
 }
 
@@ -377,6 +385,36 @@ void HeatMapSetup::addMultiChoiceOption(
                      option.setter(value.toStdString());
                      destroyMap();
                      source_.redraw();
+                   });
+}
+
+void HeatMapSetup::addDoubleOption(
+    QFormLayout* layout,
+    const web::HeatMapDataSource::MapSettingDouble& option)
+{
+  QDoubleSpinBox* spin_box = new QDoubleSpinBox(this);
+  // Enough decimals to show the step and values set from Tcl without
+  // rounding them when the control is edited.
+  int decimals = 0;
+  for (double step = option.step;
+       step > 0 && decimals < 6 && std::abs(step - std::round(step)) > 1e-9;
+       step *= 10) {
+    decimals++;
+  }
+  spin_box->setDecimals(std::max(3, decimals));
+  spin_box->setRange(option.minimum, option.maximum);
+  spin_box->setSingleStep(option.step);
+  spin_box->setValue(option.getter());
+
+  layout->addRow(QString::fromStdString(option.label), spin_box);
+
+  QObject::connect(spin_box,
+                   qOverload<double>(&QDoubleSpinBox::valueChanged),
+                   [this, option](double value) {
+                     option.setter(value);
+                     destroyMap();
+                     source_.ensureMap();
+                     emit changed();
                    });
 }
 
