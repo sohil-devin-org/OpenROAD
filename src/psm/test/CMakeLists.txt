@@ -1,3 +1,9 @@
+set(PSM_GUI_TESTS)
+
+if (Qt5_FOUND AND BUILD_GUI)
+  list(APPEND PSM_GUI_TESTS thermal_heatmap)
+endif()
+
 or_integration_tests(
   "psm"
   TESTS
@@ -47,5 +53,6 @@ or_integration_tests(
     zerosoc_pads
     zerosoc_pads_check_only
     zerosoc_pads_check_only_disconnected
+    ${PSM_GUI_TESTS}
 )
 

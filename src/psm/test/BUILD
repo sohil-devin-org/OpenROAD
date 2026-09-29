@@ -56,7 +56,13 @@ COMPULSORY_TESTS = [
     "zerosoc_pads_check_only_disconnected",
 ]
 
-ALL_TESTS = COMPULSORY_TESTS
+# Tests that dump GUI heat maps need the gui:: commands of a
+# --//:platform=gui build.
+GUI_TESTS = [
+    "thermal_heatmap",
+]
+
+ALL_TESTS = COMPULSORY_TESTS + GUI_TESTS
 
 filegroup(
     name = "regression_resources",
@@ -188,7 +194,11 @@ filegroup(
     regression_test(
         name = test_name,
         data = [":" + test_name + "_resources"],
-        tags = [] if test_name in COMPULSORY_TESTS else ["manual"],
+        tags = [] if test_name in COMPULSORY_TESTS + GUI_TESTS else ["manual"],
+        target_compatible_with = select({
+            "//:platform_gui": [],
+            "//conditions:default": ["@platforms//:incompatible"],
+        }) if test_name in GUI_TESTS else [],
         visibility = ["//visibility:public"],
     )
     for test_name in ALL_TESTS

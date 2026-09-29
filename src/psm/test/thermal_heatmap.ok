@@ -1,0 +1,14 @@
+[INFO ODB-0227] LEF file: Nangate45/Nangate45.lef, created 22 layers, 27 vias, 135 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 624 components and 2752 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1248 connections.
+[INFO ODB-0133]     Created 581 nets and 1504 connections.
+[ERROR WEB-0099] "Thermal" is not populated with data.
+[DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, auto color range 45.00 - 85.00 °C
+No differences found.
+[DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, fixed color range 50.00 - 70.00 °C
+No differences found.
+No differences found.
+[DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, auto color range 45.00 - 85.00 °C
+No differences found.
