@@ -64,10 +64,12 @@ puts $stream "while \[ \$i -lt 4 \]; do echo \"\$i\t318.15\" >> \"\$out\"; i=\$(
 puts $stream "echo '1\t400.15' >> \"\$out\""
 close $stream
 file attributes $bad_grid_hotspot -permissions 0755
-# THM-0039 includes machine dependent paths.
-suppress_message THM 39
-catch { analyze_thermal -hotspot_binary $bad_grid_hotspot -work_dir $work_dir \
+# Run from inside the work dir so the THM-0039 path is deterministic.
+set saved_dir [pwd]
+cd $work_dir
+catch { analyze_thermal -hotspot_binary $bad_grid_hotspot -work_dir . \
   -grid_rows 2 -grid_cols 2 } msg
+cd $saved_dir
 puts $msg
 puts "has results: [thm::has_thermal_results]"
 puts "--- grid steady"

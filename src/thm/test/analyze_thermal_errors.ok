@@ -21,7 +21,8 @@ THM-0006
 has results: 0
 --- hotspot log
 fatal: simulated HotSpot failure
-[INFO THM-0010] Thermal analysis: 1278 instances, 1056 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 2x2.
+[INFO THM-0010] Thermal analysis: 1278 instances, 1024 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 2x2.
+[WARNING THM-0039] Duplicate grid index 1 at line 6 of ./gcd.grid.steady.
 [ERROR THM-0006] HotSpot thermal analysis failed.
 THM-0006
 has results: 0
