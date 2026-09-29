@@ -1,1 +1,0 @@
-../../../../test/gcd_sky130hd.sdc
