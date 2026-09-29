@@ -451,7 +451,7 @@ void HeatMapDataSource::setSettings(const Renderer::Settings& settings)
       const auto& set = std::get<MapSettingDouble>(setting);
       double temp_value = set.getter();
       Renderer::setSetting<double>(settings, set.name, temp_value);
-      set.setter(temp_value);
+      set.setter(std::clamp(temp_value, set.minimum, set.maximum));
     }
   }
 

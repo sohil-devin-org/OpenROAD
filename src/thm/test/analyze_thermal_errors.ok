@@ -107,3 +107,19 @@ has results: 0
 [ERROR THM-0024] Invalid temperature "hot" in results/analyze_thermal_errors_grid/bad_grid_text.csv.
 THM-0024
 has results: 0
+[WARNING THM-0025] -ambient is ignored with -hotspot_config; set -ambient/-init_temp (Kelvin) in the config file instead.
+[INFO THM-0010] Thermal analysis: 1277 instances, 1024 tiles of 9.38 um, total power 0.0007734 W, HotSpot grid 4x4.
+Thermal analysis report
+-----------------------
+Grid:                4 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0007734 W
+Peak temperature:    46.30 C
+Average temperature: 45.14 C
+Min temperature:     45.00 C
+Hottest region:      (149.98, 150.06) - (224.97, 225.10) um [row 2, col 2]
+Instances in hottest region (1 shown):
+  _427_                                    sky130_fd_sc_hd__dfxtp_1       1.421e-05 W
+
+has results: 1
+has results after removing the design: 0
+[WARNING THM-0013] No thermal results; run analyze_thermal first.

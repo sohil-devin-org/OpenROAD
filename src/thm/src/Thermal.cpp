@@ -125,6 +125,7 @@ void ThermalAnalyzer::clearResults()
   grid_ = TemperatureGrid();
   stats_ = ThermalStats();
   last_corner_ = nullptr;
+  results_block_ = nullptr;
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
   }
@@ -381,7 +382,22 @@ void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
                   "uniform at ambient. Check liberty/activity setup.");
   }
 
-  // Work directory
+  grid_ = runHotSpot(hotspot, binary, tiles, bounds, options);
+  results_block_ = block;
+  last_corner_ = corner;
+  stats_ = computeStats(grid_, inst_power, options.report_instances);
+  if (heatmap_source_) {
+    heatmap_source_->invalidateInstances();
+  }
+  report(options.report_file);
+}
+
+TemperatureGrid ThermalAnalyzer::runHotSpot(HotSpotAdapter& hotspot,
+                                            const std::string& binary,
+                                            const std::vector<PowerTile>& tiles,
+                                            const odb::Rect& bounds,
+                                            const ThermalOptions& options) const
+{
   std::filesystem::path work_dir;
   bool remove_work_dir = false;
   if (!options.work_dir.empty()) {
@@ -402,7 +418,8 @@ void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
     work_dir = dir_template;
     remove_work_dir = !options.keep_files;
   }
-  const std::string base = (work_dir / fileSafeName(block->getName())).string();
+  const std::string base
+      = (work_dir / fileSafeName(getBlock()->getName())).string();
   const std::string flp = base + ".flp";
   const std::string ptrace = base + ".ptrace";
   const std::string steady = base + ".steady";
@@ -432,7 +449,8 @@ void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
     ok = hotspot.readGridSteady(
         grid_steady, options.grid_rows, options.grid_cols, bounds, grid);
   }
-  if (remove_work_dir) {
+  // Keep the files of a failed run so the HotSpot log can be inspected.
+  if (remove_work_dir && ok) {
     std::error_code ec;
     std::filesystem::remove_all(work_dir, ec);
   } else {
@@ -441,14 +459,7 @@ void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
   if (!ok) {
     logger_->error(utl::THM, 6, "HotSpot thermal analysis failed.");
   }
-
-  grid_ = std::move(grid);
-  last_corner_ = corner;
-  stats_ = computeStats(grid_, inst_power, options.report_instances);
-  if (heatmap_source_) {
-    heatmap_source_->invalidateInstances();
-  }
-  report(options.report_file);
+  return grid;
 }
 
 void ThermalAnalyzer::checkGridSize(int rows,
@@ -589,15 +600,17 @@ void ThermalAnalyzer::readTemperatureGrid(const std::string& file)
     } else if (static_cast<int>(row.size()) != grid.cols) {
       logger_->error(utl::THM, 15, "Inconsistent row length in {}.", file);
     }
+    // Bound the grid while reading, before anything more is stored.
+    checkGridSize(grid.rows + 1, grid.cols, grid.bounds);
     grid.temps_c.insert(grid.temps_c.end(), row.begin(), row.end());
     grid.rows++;
   }
   if (grid.empty()) {
     logger_->error(utl::THM, 16, "No temperatures found in {}.", file);
   }
-  checkGridSize(grid.rows, grid.cols, grid.bounds);
   clearResults();
   grid_ = std::move(grid);
+  results_block_ = block;
   last_corner_ = sta_->cmdScene();
   stats_ = computeStats(grid_, getInstancePower(last_corner_), 10);
   if (heatmap_source_) {

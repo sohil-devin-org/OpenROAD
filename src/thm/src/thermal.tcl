@@ -61,6 +61,10 @@ proc analyze_thermal { args } {
   if { [info exists keys(-ambient)] } {
     set ambient $keys(-ambient)
     sta::check_float "-ambient" $ambient
+    if { $hotspot_config != "" } {
+      utl::warn THM 25 "-ambient is ignored with -hotspot_config; set\
+        -ambient/-init_temp (Kelvin) in the config file instead."
+    }
   }
   set report_instances 10
   if { [info exists keys(-report_instances)] } {

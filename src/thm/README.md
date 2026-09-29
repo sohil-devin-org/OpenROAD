@@ -49,7 +49,7 @@ analyze_thermal
 | `-keep_files` | Keep the generated HotSpot files. |
 | `-tile_size` | Size in microns of the square tiles instance power is binned into. Defaults to the die size divided by 32. |
 | `-grid_rows`, `-grid_cols` | Resolution of the HotSpot grid model. Defaults to 64 x 64. Each dimension is limited to the die size in database units and the grid to 2^20 cells. |
-| `-ambient` | Ambient temperature in degrees Celsius. Defaults to 45. |
+| `-ambient` | Ambient temperature in degrees Celsius. Defaults to 45. Only used with the built-in configuration; with `-hotspot_config` it is ignored (with a warning) and the file's `-ambient`/`-init_temp` apply. |
 | `-report_instances` | Number of instances to list for the hottest region. Defaults to 10. |
 | `-report_file` | Also write the report to this file. |
 

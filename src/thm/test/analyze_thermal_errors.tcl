@@ -112,3 +112,18 @@ foreach { name content } {
   puts $msg
   puts "has results: [thm::has_thermal_results]"
 }
+
+# -ambient only applies to the built-in configuration.
+set config [file join $grid_dir custom.config]
+set stream [open $config w]
+puts $stream "-ambient 318.15"
+close $stream
+analyze_thermal -hotspot_binary $fake_hotspot -work_dir $work_dir \
+  -hotspot_config $config -ambient 60 -grid_rows 4 -grid_cols 4 \
+  -report_instances 1
+puts "has results: [thm::has_thermal_results]"
+
+# Results belong to the analyzed block: removing the design drops them.
+odb::dbChip_destroy [[ord::get_db] getChip]
+puts "has results after removing the design: [thm::has_thermal_results]"
+report_thermal

@@ -27,6 +27,8 @@ class HeatMapSourceRegistration;
 
 namespace thm {
 
+class HotSpotAdapter;
+
 // User facing knobs for analyze_thermal.  Distances are in microns,
 // temperatures in degrees Celsius.
 struct ThermalOptions
@@ -109,10 +111,16 @@ class ThermalAnalyzer
 
   // Runs the full pipeline: per instance power from OpenSTA -> tiles ->
   // HotSpot floorplan/power trace -> HotSpot grid model -> temperature grid.
-  // Returns true on success; results are available through the getters.
+  // Errors are reported through the logger; results are available through
+  // the getters.
   void analyze(sta::Scene* corner, const ThermalOptions& options);
 
-  bool hasResults() const { return !grid_.empty(); }
+  // Results belong to the block they were computed for.
+  bool hasResults() const
+  {
+    return !grid_.empty() && results_block_ != nullptr
+           && getBlock() == results_block_;
+  }
   const TemperatureGrid& getTemperatureGrid() const { return grid_; }
   const ThermalStats& getStats() const { return stats_; }
   sta::Scene* getLastCorner() const { return last_corner_; }
@@ -139,6 +147,14 @@ class ThermalAnalyzer
       int max_instances);
   void checkGridSize(int rows, int cols, const odb::Rect& bounds) const;
 
+  // Writes the HotSpot inputs, runs it and reads the silicon temperatures
+  // back; the work directory is kept when the run fails.
+  TemperatureGrid runHotSpot(HotSpotAdapter& hotspot,
+                             const std::string& binary,
+                             const std::vector<PowerTile>& tiles,
+                             const odb::Rect& bounds,
+                             const ThermalOptions& options) const;
+
   // Logs the report; also writes it to `file` when non-empty.
   void report(const std::string& file = "") const;
 
@@ -162,6 +178,7 @@ class ThermalAnalyzer
   TemperatureGrid grid_;
   ThermalStats stats_;
   sta::Scene* last_corner_ = nullptr;
+  odb::dbBlock* results_block_ = nullptr;
 
   std::shared_ptr<web::HeatMapSourceRegistration> heatmap_source_;
 };

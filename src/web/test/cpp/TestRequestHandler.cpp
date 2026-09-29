@@ -1959,6 +1959,18 @@ TEST_F(TileHandlerTest, HeatMapDoubleSettingIsExposedAndSettable)
   EXPECT_DOUBLE_EQ(
       findHeatMapOption(after, "FixedMin").at("value").to_number<double>(),
       45.5);
+
+  // Values outside the advertised range are clamped to it.
+  set_req.json = parseObj(
+      R"({"name":"DoubleSetting","option":"FixedMin","value":5000})");
+  handler_->handleSetHeatMap(set_req, state_);
+  {
+    std::lock_guard<std::mutex> lock(state_.heatmap_mutex);
+    const auto* source = dynamic_cast<const DoubleSettingHeatMap*>(
+        state_.heatmaps.at("DoubleSetting").get());
+    ASSERT_NE(source, nullptr);
+    EXPECT_DOUBLE_EQ(source->getFixedMin(), 1000.0);
+  }
 }
 
 TEST_F(TileHandlerTest, HeatMapsMetadataIsLazyForInactiveSources)
