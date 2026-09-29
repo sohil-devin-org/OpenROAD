@@ -7,6 +7,8 @@ or_integration_tests(
   "thm"
   TESTS
     analyze_thermal_gcd
+    analyze_thermal_ir_gcd
+    physics_derating_gcd
     thermal_config_errors
     thermal_map_gcd
 )
@@ -25,3 +27,19 @@ gtest_discover_tests(thermal_core_test
 )
 
 add_dependencies(build_and_test thermal_core_test)
+
+add_executable(electromigration_test cpp/ElectromigrationTest.cpp)
+
+target_link_libraries(electromigration_test
+  GTest::gtest
+  GTest::gtest_main
+  thm_lib
+  thm_core
+  utl_lib
+)
+
+gtest_discover_tests(electromigration_test
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_dependencies(build_and_test electromigration_test)

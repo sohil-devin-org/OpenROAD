@@ -151,6 +151,8 @@ void Thermal::setConfigValue(const std::string& key, const std::string& value)
       {"activity_file", str(c.activity_file)},
       {"nominal_vdd", dbl(c.nominal_vdd_v)},
       {"include_ir_drop", boolean(c.include_ir_drop)},
+      {"power_net", str(c.ir_power_net)},
+      {"vsrc", str(c.ir_vsrc_file)},
   };
   auto it = setters.find(key);
   if (it == setters.end()) {
@@ -548,6 +550,9 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (options.corner != nullptr) {
     power_extractor_->setCorner(options.corner);
   }
+  derate_applier_->setCorner(power_extractor_->corner());
+  ir_coupling_->setCorner(power_extractor_->corner());
+  power_extractor_->readActivityFile(config_.activity_file, "");
   for (PhysicsObserver* obs : observers_) {
     obs->onAnalysisBegin(options.label);
   }
@@ -586,6 +591,10 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (options.include_timing) {
     runTiming(metrics);
   }
+  // Electromigration: Black's equation per tile of the bottom die, with the
+  // IR-drop current proxy when it is available (see
+  // ElectromigrationModel::tileLifetimeMap); worst tile vs the reference.
+  metrics.em_lifetime_factor = ElectromigrationModel::worstFactor(emRiskMap(0));
   metrics.runtime_s
       = std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
             .count();
@@ -714,20 +723,20 @@ const MapSnapshot* Thermal::irDropMap() const
 
 MapSnapshot Thermal::emRiskMap(int die) const
 {
-  // Relative lifetime of the metal at every tile assuming uniform current
-  // density: only the temperature term of Black's equation varies.
-  MapSnapshot map;
-  map.name = "em";
-  map.units = "";
-  map.die = die;
-  map.nx = grid_.nx();
-  map.ny = grid_.ny();
-  map.values = grid_.activeLayer(die);
+  // Relative lifetime of the metal at every tile: Arrhenius temperature term
+  // of Black's equation, times the current term from the tile current
+  // I = P_tile / VDD_tile when an IR-drop map is available (uniform current
+  // otherwise).
   ElectromigrationModel em(config_.em);
-  for (double& v : map.values) {
-    v = em.relativeLifetime(1.0, v, 1.0);
-  }
-  return map;
+  const PowerMap empty(grid_.nx(), grid_.ny());
+  const PowerMap& power = die >= 0 && die < static_cast<int>(power_maps_.size())
+                              ? power_maps_[die]
+                              : empty;
+  return em.tileLifetimeMap(grid_,
+                            power,
+                            has_ir_map_ && die == 0 ? &ir_map_ : nullptr,
+                            config_.nominal_vdd_v,
+                            die);
 }
 
 void Thermal::loadReference(const std::string& path)

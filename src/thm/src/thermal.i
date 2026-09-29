@@ -3,6 +3,7 @@
 
 %{
 #include "ord/OpenRoad.hh"
+#include "thm/PhysicsCoupling.h"
 #include "thm/Thermal.h"
 #include "sta/Scene.hh"
 #include "db_sta/dbSta.hh"
@@ -202,6 +203,30 @@ double get_screening_length_um()
 {
   odb::dbBlock* block = getThermal()->db()->getChip()->getBlock();
   return getThermal()->screeningLengthDbu() / block->getDbUnitsPerMicron();
+}
+
+double get_em_lifetime_factor()
+{
+  return getThermal()->lastMetrics().em_lifetime_factor;
+}
+
+double get_derated_tns()
+{
+  return getThermal()->lastMetrics().tns_derated_s;
+}
+
+double get_nominal_tns()
+{
+  return getThermal()->lastMetrics().tns_nominal_s;
+}
+
+// OpenSTA design total power (what report_power prints as Total) for the
+// command corner; used to check the per-instance extraction against it.
+double get_sta_design_power()
+{
+  thm::Thermal* thermal = getThermal();
+  thm::PowerExtractor extractor(thermal->sta(), thermal->logger());
+  return extractor.designTotalPowerW();
 }
 
 } // namespace thm

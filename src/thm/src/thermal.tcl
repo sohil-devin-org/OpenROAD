@@ -19,6 +19,8 @@ sta::define_cmd_args "set_thermal_config" { \
     [-runaway_temperature temp_c] \
     [-nominal_vdd volts] \
     [-include_ir_drop] [-no_ir_drop] \
+    [-vsrc file] \
+    [-power_net net] \
     [-leakage_fits file] \
     [-derate_fits file] \
     [-config_file file] \
@@ -31,6 +33,7 @@ proc set_thermal_config { args } {
           -bond_conductivity -thinned_die_thickness -second_die_power \
           -activity_scale -activity_file -phase -loop_max_iterations \
           -loop_peak_tolerance -runaway_temperature -nominal_vdd \
+          -vsrc -power_net \
           -leakage_fits -derate_fits -config_file -set} \
     flags {-two_die -single_die -clear_phases -include_ir_drop -no_ir_drop \
            -report}
@@ -52,6 +55,8 @@ proc set_thermal_config { args } {
     -loop_peak_tolerance loop_peak_tolerance
     -runaway_temperature runaway_temperature
     -nominal_vdd nominal_vdd
+    -vsrc vsrc
+    -power_net power_net
   } {
     if { [info exists keys($opt)] } {
       thm::set_config_value_cmd $key $keys($opt)

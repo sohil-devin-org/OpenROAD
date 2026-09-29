@@ -164,6 +164,11 @@ struct ThermalConfig
   // Nominal supply voltage used when no IR-drop analysis is available.
   double nominal_vdd_v = 1.8;
   bool include_ir_drop = true;
+  // IR-drop analysis (PDNSim): power net to analyze (empty: first routed
+  // POWER net of the block) and voltage-source location file in the
+  // analyze_power_grid -vsrc format (empty: PDNSim's own sources).
+  std::string ir_power_net;
+  std::string ir_vsrc_file;
 
   // Build the full vertical stack for the configured dies.
   std::vector<StackLayer> buildStack() const;
