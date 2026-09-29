@@ -58,7 +58,7 @@ Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
         0 |   0.7457 |  4.677422e+03 |   +0.00% |  1.63e-13 |      
 [INFO GPL-0197] Physics force enabled at iteration 1 (overflow 0.746, weight 0.50).
 [INFO GPL-0100] Timing-driven iteration 1/2, virtual: false.
-[INFO GPL-0101]    Iter: 8, overflow: 0.627, keep resizer changes at: 1, HPWL: 10535350
+[INFO GPL-0101]    Iter: 3, overflow: 0.623, keep resizer changes at: 1, HPWL: 10674271
 Iteration |   Area    | Resized | Buffers | Nets repaired | Remaining
 ---------------------------------------------------------------------
         0 |     +0.0% |       0 |       0 |             0 |       581
@@ -80,73 +80,63 @@ Iteration |   Area    | Resized | Buffers | Nets repaired | Remaining
       390 |    -17.9% |     144 |        0 |         5
     final |    -18.9% |     150 |        0 |         0
 -------------------------------------------------------
-[INFO GPL-0106] Timing-driven: worst slack 9.34931e-09
+[INFO GPL-0106] Timing-driven: worst slack 9.349864e-09
 [INFO GPL-0107] Timing-driven: repair_design delta area: -133.798 um^2 (-17.98%)
 [INFO GPL-0108] Timing-driven: repair_design, gpl delta gcells: -150 (-29.41%)
 [INFO GPL-0109] Timing-driven: repair_design, gcells created: 0, deleted: 150
 [INFO GPL-0110] Timing-driven: new target density: 0.6789891
 Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
 ---------------------------------------------------------------
-       10 |   0.6249 |  5.145015e+03 |  +10.00% |  2.66e-13 |      
-       20 |   0.6001 |  5.122118e+03 |   -0.45% |  4.33e-13 |      
-       30 |   0.5606 |  5.146409e+03 |   +0.47% |  7.06e-13 |      
+       10 |   0.4266 |  5.353171e+03 |  +14.45% |  2.66e-13 |      
+       20 |   0.4108 |  5.133335e+03 |   -4.11% |  4.33e-13 |      
+       30 |   0.4387 |  5.095534e+03 |   -0.74% |  7.06e-13 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_40: peak 45.00 C, avg 45.00 C, max gradient 0.17 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 2 (iter 40): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-       40 |   0.5413 |  5.128734e+03 |   -0.34% |  1.15e-12 |      
-       50 |   0.5469 |  5.129564e+03 |   +0.02% |  1.87e-12 |      
-       60 |   0.5382 |  5.126958e+03 |   -0.05% |  3.05e-12 |      
-       70 |   0.5366 |  5.117814e+03 |   -0.18% |  4.97e-12 |      
+[INFO THM-0030] gpl_iter_40: peak 45.00 C, avg 45.00 C, max gradient 0.07 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 2 (iter 40): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+       40 |   0.4762 |  5.080928e+03 |   -0.29% |  1.15e-12 |      
+       50 |   0.4767 |  5.086355e+03 |   +0.11% |  1.87e-12 |      
+       60 |   0.4894 |  5.074630e+03 |   -0.23% |  3.05e-12 |      
+       70 |   0.4989 |  5.067697e+03 |   -0.14% |  4.97e-12 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_80: peak 45.00 C, avg 45.00 C, max gradient 0.11 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 3 (iter 80): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-       80 |   0.5359 |  5.118440e+03 |   +0.01% |  8.10e-12 |      
-       90 |   0.5362 |  5.123547e+03 |   +0.10% |  1.32e-11 |      
-      100 |   0.5346 |  5.125634e+03 |   +0.04% |  2.15e-11 |      
-      110 |   0.5337 |  5.126608e+03 |   +0.02% |  3.50e-11 |      
+[INFO THM-0030] gpl_iter_80: peak 45.00 C, avg 45.00 C, max gradient 0.10 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 3 (iter 80): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+       80 |   0.5045 |  5.072202e+03 |   +0.09% |  8.10e-12 |      
+       90 |   0.5084 |  5.085267e+03 |   +0.26% |  1.32e-11 |      
+      100 |   0.5149 |  5.082986e+03 |   -0.04% |  2.15e-11 |      
+      110 |   0.5160 |  5.095404e+03 |   +0.24% |  3.50e-11 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_120: peak 45.00 C, avg 45.00 C, max gradient 0.09 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 4 (iter 120): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-      120 |   0.5348 |  5.125476e+03 |   -0.02% |  5.70e-11 |      
-      130 |   0.5389 |  5.127441e+03 |   +0.04% |  9.28e-11 |      
-      140 |   0.5431 |  5.133264e+03 |   +0.11% |  1.51e-10 |      
-      150 |   0.5495 |  5.135618e+03 |   +0.05% |  2.46e-10 |      
+[INFO THM-0030] gpl_iter_120: peak 45.00 C, avg 45.00 C, max gradient 0.10 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 4 (iter 120): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+      120 |   0.5127 |  5.094998e+03 |   -0.01% |  5.70e-11 |      
+      130 |   0.5107 |  5.091981e+03 |   -0.06% |  9.28e-11 |      
+      140 |   0.5056 |  5.089546e+03 |   -0.05% |  1.51e-10 |      
+      150 |   0.4933 |  5.086306e+03 |   -0.06% |  2.46e-10 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_160: peak 45.00 C, avg 45.00 C, max gradient 0.12 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 5 (iter 160): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-      160 |   0.5550 |  5.146762e+03 |   +0.22% |  4.01e-10 |      
-      170 |   0.5542 |  5.157780e+03 |   +0.21% |  6.54e-10 |      
-      180 |   0.5445 |  5.155651e+03 |   -0.04% |  1.06e-09 |      
-      190 |   0.5271 |  5.137753e+03 |   -0.35% |  1.73e-09 |      
+[INFO THM-0030] gpl_iter_160: peak 45.00 C, avg 45.00 C, max gradient 0.09 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 5 (iter 160): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+      160 |   0.4741 |  5.083356e+03 |   -0.06% |  4.01e-10 |      
+      170 |   0.4379 |  5.098403e+03 |   +0.30% |  6.54e-10 |      
+      180 |   0.3847 |  5.100785e+03 |   +0.05% |  1.06e-09 |      
+      190 |   0.3358 |  5.124944e+03 |   +0.47% |  1.72e-09 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_200: peak 45.00 C, avg 45.00 C, max gradient 0.10 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 6 (iter 200): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-      200 |   0.5110 |  5.123834e+03 |   -0.27% |  2.82e-09 |      
-      210 |   0.5180 |  5.105275e+03 |   -0.36% |  4.60e-09 |      
-      220 |   0.4761 |  5.120965e+03 |   +0.31% |  7.49e-09 |      
-      230 |   0.4812 |  5.060913e+03 |   -1.17% |  1.22e-08 |      
+[INFO THM-0030] gpl_iter_200: peak 45.00 C, avg 45.00 C, max gradient 0.06 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 6 (iter 200): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+      200 |   0.2995 |  5.082728e+03 |   -0.82% |  2.53e-09 |      
+      210 |   0.3445 |  5.035692e+03 |   -0.93% |  3.73e-09 |      
+      220 |   0.3675 |  5.116814e+03 |   +1.61% |  5.49e-09 |      
+      230 |   0.3038 |  5.199647e+03 |   +1.62% |  8.08e-09 |      
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_240: peak 45.00 C, avg 45.00 C, max gradient 0.07 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 7 (iter 240): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-      240 |   0.4282 |  5.100092e+03 |   +0.77% |  1.99e-08 |      
-      250 |   0.4092 |  5.056562e+03 |   -0.85% |  3.24e-08 |      
-      260 |   0.3570 |  5.071361e+03 |   +0.29% |  5.28e-08 |      
-      270 |   0.3129 |  5.057331e+03 |   -0.28% |  8.09e-08 |      
-[INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_280: peak 45.00 C, avg 45.00 C, max gradient 0.05 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3493e-09 s, derated 9.3493e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 8 (iter 280): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.349e-09 s, derated 9.349e-09 s.
-      280 |   0.2823 |  5.067708e+03 |   +0.21% |  1.19e-07 |      
-      290 |   0.2462 |  5.051324e+03 |   -0.32% |  1.76e-07 |      
-      300 |   0.2170 |  5.069699e+03 |   +0.36% |  2.59e-07 |      
+[INFO THM-0030] gpl_iter_240: peak 45.00 C, avg 45.00 C, max gradient 0.04 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3499e-09 s, derated 9.3499e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 7 (iter 240): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.350e-09 s, derated 9.350e-09 s.
+      240 |   0.2185 |  5.222815e+03 |   +0.45% |  1.19e-08 |      
 [INFO GPL-0100] Timing-driven iteration 2/2, virtual: false.
-[INFO GPL-0101]    Iter: 310, overflow: 0.195, keep resizer changes at: 1, HPWL: 10161268
+[INFO GPL-0101]    Iter: 243, overflow: 0.190, keep resizer changes at: 1, HPWL: 10510128
 Iteration |   Area    | Resized | Buffers | Nets repaired | Remaining
 ---------------------------------------------------------------------
         0 |     +0.0% |       0 |       0 |             0 |       431
@@ -168,25 +158,17 @@ Iteration |   Area    | Resized | Buffers | Nets repaired | Remaining
       390 |     +0.0% |       0 |        0 |         5
     final |     +0.0% |       0 |        0 |         0
 -------------------------------------------------------
-[INFO GPL-0106] Timing-driven: worst slack 9.341507e-09
+[INFO GPL-0106] Timing-driven: worst slack 9.3392805e-09
 [INFO GPL-0107] Timing-driven: repair_design delta area: 0.000 um^2 (+0.00%)
 [INFO GPL-0108] Timing-driven: repair_design, gpl delta gcells: 0 (+0.00%)
 [INFO GPL-0109] Timing-driven: repair_design, gcells created: 0, deleted: 0
 [INFO GPL-0110] Timing-driven: new target density: 0.6789891
 Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
 ---------------------------------------------------------------
-      310 |   0.1893 |  5.079888e+03 |   +0.20% |  3.81e-07 |      
-[INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_iter_320: peak 45.00 C, avg 45.00 C, max gradient 0.04 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3415e-09 s, derated 9.3415e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 9 (iter 320): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.342e-09 s, derated 9.342e-09 s.
-      320 |   0.1674 |  5.094922e+03 |   +0.30% |  5.61e-07 |      
-      330 |   0.1468 |  5.112324e+03 |   +0.34% |  8.27e-07 |      
-      340 |   0.1300 |  5.131203e+03 |   +0.37% |  1.22e-06 |      
-      350 |   0.1149 |  5.148744e+03 |   +0.34% |  1.79e-06 |      
-      359 |   0.0982 |  5.169147e+03 |          |  2.64e-06 |      
+      250 |   0.1056 |  5.522753e+03 |   +5.74% |  1.75e-08 |      
+      251 |   0.0985 |  5.555466e+03 |          |  1.90e-08 |      
 ---------------------------------------------------------------
-[INFO GPL-1001] Global placement finished at iteration 359
+[INFO GPL-1001] Global placement finished at iteration 251
 [INFO GPL-1002] Placed Cell Area              610.1817
 [INFO GPL-1003] Available Free Area          6368.0400
 [INFO GPL-1004] Minimum Feasible Density        0.1200 (cell_area / free_area)
@@ -198,30 +180,30 @@ Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
 [INFO GPL-1013] Total timing-driven delta area: -133.80 (-17.98%)
 [INFO GPL-1014] Final placement area: 610.18 (-17.98%)
 [INFO THM-0072] Applied physics derates to 0 instances.
-[INFO THM-0030] gpl_final: peak 45.00 C, avg 45.00 C, max gradient 0.04 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
-[INFO THM-0033]   WNS nominal 9.3415e-09 s, derated 9.3415e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO GPL-0198] Physics checkpoint 10 (iter 359): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.342e-09 s, derated 9.342e-09 s.
-[INFO GPL-0199] Physics-driven placement: 10 checkpoints, peak temperature 45.00 -> 45.00 C, derated WNS 9.338e-09 -> 9.342e-09 s.
-[INFO GPL-1018] Final HPWL (um): 5179.57
+[INFO THM-0030] gpl_final: peak 45.00 C, avg 45.00 C, max gradient 0.03 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3393e-09 s, derated 9.3393e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 8 (iter 251): peak 45.00 C, avg 45.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.339e-09 s, derated 9.339e-09 s.
+[INFO GPL-0199] Physics-driven placement: 8 checkpoints, peak temperature 45.00 -> 45.00 C, derated WNS 9.338e-09 -> 9.339e-09 s.
+[INFO GPL-1018] Final HPWL (um): 5560.74
 Physics report (gpl_final)
-  die 0: peak 45.0003 C, average 45 C
-  max lateral gradient:      0.0412228 C/mm
-  total power:               0.000141605 W
+  die 0: peak 45.0002 C, average 45 C
+  max lateral gradient:      0.0296848 C/mm
+  total power:               0.000141756 W
   leakage power:             1.37433e-05 W
   worst IR drop:             0 V
-  WNS nominal / derated:     9.34151e-09 / 9.34151e-09 s
+  WNS nominal / derated:     9.33928e-09 / 9.33928e-09 s
   TNS nominal / derated:     0 / 0 s
   electrothermal iterations: 1 (converged)
   EM lifetime factor:        1
   thermal clock skew delta:  0 s
   derating:                  disabled
-  snapshots in history:      10
+  snapshots in history:      8
   hottest instances:
-    _507_: 45.0003 C, 8.19853e-07 W, 1.8 V, derate 1
-    _508_: 45.0003 C, 2.23966e-07 W, 1.8 V, derate 1
-    _509_: 45.0003 C, 4.41544e-07 W, 1.8 V, derate 1
-    _514_: 45.0003 C, 8.87823e-07 W, 1.8 V, derate 1
-    _515_: 45.0003 C, 3.01992e-07 W, 1.8 V, derate 1
+    _443_: 45.0002 C, 1.27556e-07 W, 1.8 V, derate 1
+    _473_: 45.0002 C, 5.00691e-07 W, 1.8 V, derate 1
+    _474_: 45.0002 C, 9.4121e-07 W, 1.8 V, derate 1
+    _491_: 45.0002 C, 1.65216e-07 W, 1.8 V, derate 1
+    _493_: 45.0002 C, 1.49266e-07 W, 1.8 V, derate 1
 
 PASS: physics checkpoints recorded
 PASS: peak temperature above ambient
