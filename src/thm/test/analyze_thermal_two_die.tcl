@@ -1,7 +1,9 @@
 # Two-die stack: gcd on the bottom die with a uniformly powered second die
 # on top, solved with the finite-volume solver.  report_physics lists the
-# per-die peaks (die 1 carries 0.05 W against ~0.14 mW for gcd, so it must be
-# the hotter one and die 0 must be heated through the bond layer).
+# per-die peaks.  Die 1 carries 0.05 W spread uniformly and sits directly
+# under the 0.1 K/W heat sink, so its rise is a few mK; die 0 draws only
+# ~0.14 mW but concentrated in a few tiles whose heat has to cross the
+# low-conductivity BEOL and bond layers, so its hot spots rise more.
 source "helpers.tcl"
 read_lef Nangate45/Nangate45.lef
 read_def Nangate45_data/gcd.def

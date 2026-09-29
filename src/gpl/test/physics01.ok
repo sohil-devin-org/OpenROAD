@@ -187,7 +187,7 @@ Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
 [INFO GPL-1018] Final HPWL (um): 5560.74
 Physics report (gpl_final)
   die 0: peak 45.0002 C, average 45 C
-  max lateral gradient:      0.0296848 C/mm
+  max lateral gradient:      0.0296856 C/mm
   total power:               0.000141756 W
   leakage power:             1.37433e-05 W
   worst IR drop:             0 V

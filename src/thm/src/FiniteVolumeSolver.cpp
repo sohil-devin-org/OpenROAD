@@ -88,7 +88,9 @@ struct System
   std::vector<double> gz;
   std::vector<double> g_bnd;     // conductance to ambient (W/K)
   std::vector<double> capacity;  // heat capacity of the cell (J/K)
-  std::vector<double> diag;      // row sum of all conductances (+ C/dt)
+  std::vector<double> self;      // g_bnd + C/dt: terms not shared with a
+                                 // neighbour
+  std::vector<double> diag;      // self + all neighbour conductances
   // LDL^T factors of the per-column tridiagonal preconditioner.
   std::vector<double> ldl_d;
   std::vector<double> ldl_l;
@@ -229,6 +231,7 @@ void FiniteVolumeSolver::buildSystem(const ThermalConfig& config,
   sys.gz.assign(n, 0.0);
   sys.g_bnd.assign(n, 0.0);
   sys.capacity.assign(n, 0.0);
+  sys.self.assign(n, 0.0);
   sys.diag.assign(n, 0.0);
 
   const double dx = grid.dx();
@@ -304,7 +307,11 @@ void FiniteVolumeSolver::buildSystem(const ThermalConfig& config,
     for (int y = 0; y < sys.ny; ++y) {
       for (int x = 0; x < sys.nx; ++x) {
         const int i = sys.index(x, y, z);
-        double d = sys.g_bnd[i] + sys.gx[i] + sys.gy[i] + sys.gz[i];
+        sys.self[i] = sys.g_bnd[i];
+        if (dt_s > 0) {
+          sys.self[i] += sys.capacity[i] / dt_s;
+        }
+        double d = sys.self[i] + sys.gx[i] + sys.gy[i] + sys.gz[i];
         if (x > 0) {
           d += sys.gx[i - 1];
         }
@@ -313,9 +320,6 @@ void FiniteVolumeSolver::buildSystem(const ThermalConfig& config,
         }
         if (z > 0) {
           d += sys.gz[i - sys.nx * sys.ny];
-        }
-        if (dt_s > 0) {
-          d += sys.capacity[i] / dt_s;
         }
         sys.diag[i] = d;
       }
@@ -354,8 +358,10 @@ void FiniteVolumeSolver::applyMatrix(const System& sys,
   const int n = sys.size();
   const int plane = sys.nx * sys.ny;
   y.resize(n);
+  // y = A x assembled edge by edge: every conductance g between i and j
+  // contributes g (x_i - x_j) to row i and g (x_j - x_i) to row j.
   for (int i = 0; i < n; ++i) {
-    y[i] = sys.diag[i] * x[i];
+    y[i] = sys.self[i] * x[i];
   }
   for (int z = 0; z < sys.nz; ++z) {
     for (int yy = 0; yy < sys.ny; ++yy) {

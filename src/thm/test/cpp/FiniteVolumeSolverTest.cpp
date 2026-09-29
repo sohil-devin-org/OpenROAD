@@ -446,8 +446,11 @@ TEST_F(FiniteVolumeSolverTest, TemperatureDependentConductivityRaisesPeak)
   ThermalConfig config = spreadingConfig(config_);
   config.heat_sink_on_bottom = true;
   config.ambient_c = 60.0;
+  // 0.5 W keeps the hot spot below ~100 C so the power law stays in the
+  // regime the comparison below assumes.
+  const double p = 0.5;
   ThermalGrid linear = makeGrid(config, n, n);
-  auto maps = pointPower(n, n, n / 2, n / 2, 5.0);
+  auto maps = pointPower(n, n, n / 2, n / 2, p);
   solver_->solveSteady(maps, config, linear, false);
   const double rise_linear = linear.peak(0) - config.ambient_c;
 
@@ -456,12 +459,15 @@ TEST_F(FiniteVolumeSolverTest, TemperatureDependentConductivityRaisesPeak)
   ThermalGrid grid = makeGrid(nonlinear, n, n);
   const SolveResult r = solver_->solveSteady(maps, nonlinear, grid, false);
   EXPECT_TRUE(r.converged);
-  EXPECT_NEAR(r.boundary_heat_w, 5.0, 1e-6 * 5.0);
+  EXPECT_NEAR(r.boundary_heat_w, p, 1e-6 * p);
   const double rise_nonlinear = grid.peak(0) - nonlinear.ambient_c;
   EXPECT_GT(rise_nonlinear, rise_linear);
-  // k(60 C) / k(300 K) = (300 / 333.15)^1.3 ~ 0.87; the hot spot is hotter
-  // still, so the rise grows by a few percent up to ~20 %.
+  // The spreading resistance in the silicon scales with 1/k.  Between the
+  // ambient (60 C) and the hot spot (< 100 C) k(T)/k(300 K) lies between
+  // (300 / 333)^1.3 ~ 0.87 and (300 / 373)^1.3 ~ 0.75, so the rise grows by
+  // more than a few percent but less than 1/0.75.
   EXPECT_LT(rise_nonlinear, 1.3 * rise_linear);
+  EXPECT_LT(grid.peak(0), 100.0);
 }
 
 // 12. Warm start from the converged solution is a no-op: the same
@@ -483,6 +489,31 @@ TEST_F(FiniteVolumeSolverTest, WarmStartReusesSolution)
   for (size_t i = 0; i < t.size(); ++i) {
     EXPECT_NEAR(grid.values()[i], t[i], 1e-8 * peak);
   }
+}
+
+// 13. Production-size grid: 64x64 tiles on a two-die stack (~10 z cells)
+//     solves in well under a second with the default tolerance, and two
+//     cold solves produce bit-identical temperatures (fixed loop order, no
+//     unordered reductions).
+TEST_F(FiniteVolumeSolverTest, LargeGridIsFastAndDeterministic)
+{
+  const int n = 64;
+  ThermalConfig config = spreadingConfig(config_);
+  config.two_die = true;
+  config.solver_tolerance = 1e-8;
+  ThermalGrid grid = makeGrid(config, n, n);
+  EXPECT_GE(grid.nz(), 8);
+  auto maps = gaussianPower(n, n, 2.0, 0.1);
+  maps.push_back(uniformPower(n, n, 1.0)[0]);
+  const SolveResult r = solver_->solveSteady(maps, config, grid, false);
+  EXPECT_TRUE(r.converged);
+  EXPECT_NEAR(r.boundary_heat_w, 3.0, 1e-6 * 3.0);
+  EXPECT_LT(r.runtime_s, 1.0);
+  const std::vector<double> first = grid.values();
+
+  ThermalGrid again = makeGrid(config, n, n);
+  solver_->solveSteady(maps, config, again, false);
+  EXPECT_EQ(again.values(), first);
 }
 
 }  // namespace thm
