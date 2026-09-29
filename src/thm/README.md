@@ -249,11 +249,21 @@ write_physics_animation
 ### Global Placement
 
 Physics-driven placement is enabled through the placer command; see the
-[gpl README](../gpl/README.md) for the full option list.
+[gpl README](../gpl/README.md) for the full option list.  While the Nesterov
+loop runs, `gpl` calls the thermal engine at every checkpoint (history labels
+`gpl_iter_N`) and reads the per-instance power and derate factors back, so
+`report_physics`, `thm::get_history_size` and `write_physics_animation` work
+on the placement history right after the command returns.
 
 <!-- checker: skip -->
 ```tcl
-global_placement -physics_driven ...
+global_placement -physics_driven
+    [-physics_weight weight]
+    [-physics_checkpoint_interval iterations]
+    [-physics_field_interval iterations]
+    [-physics_start_overflow overflow]
+    [-physics_grid n]
+    ... other global_placement options
 ```
 
 ## Query helpers
