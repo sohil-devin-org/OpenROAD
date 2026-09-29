@@ -7,6 +7,7 @@
 #include "psm/pdnsim.h"
 #include "sta/Scene.hh"
 #include "thermal.h"
+#include "utl/Logger.h"
 
 namespace ord {
 psm::PDNSim*
@@ -20,6 +21,17 @@ class dbNet;
 using ord::getPDNSim;
 using psm::PDNSim;
 using sta::Scene;
+
+static const psm::ThermalGrid&
+get_thermal_grid()
+{
+  const psm::ThermalGrid& grid = getPDNSim()->getThermalGrid();
+  if (grid.empty()) {
+    ord::OpenRoad::openRoad()->getLogger()->error(
+        utl::PSM, 227, "No thermal result available. Run analyze_thermal first.");
+  }
+  return grid;
+}
 
 #if TCL_MAJOR_VERSION < 9 && !defined(Tcl_Size)
   typedef int Tcl_Size;
@@ -163,6 +175,43 @@ clear_thermal_color_range_cmd()
 {
   PDNSim* pdnsim = getPDNSim();
   pdnsim->setThermalColorRange(std::nullopt);
+}
+
+double
+thermal_peak()
+{
+  return get_thermal_grid().getMax();
+}
+
+double
+thermal_average()
+{
+  return get_thermal_grid().getAverage();
+}
+
+double
+thermal_min()
+{
+  return get_thermal_grid().getMin();
+}
+
+double
+thermal_temperature_at(double x_um, double y_um)
+{
+  const psm::ThermalGrid& grid = get_thermal_grid();
+  odb::dbBlock* block
+      = ord::OpenRoad::openRoad()->getDb()->getChip()->getBlock();
+  const odb::Point pt(block->micronsToDbu(x_um), block->micronsToDbu(y_um));
+  const std::optional<double> temperature = grid.getTemperatureAt(pt);
+  if (!temperature) {
+    ord::OpenRoad::openRoad()->getLogger()->error(
+        utl::PSM,
+        228,
+        "({}, {}) um is outside the thermal grid.",
+        x_um,
+        y_um);
+  }
+  return *temperature;
 }
 
 %} // inline
