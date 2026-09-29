@@ -1,0 +1,19 @@
+Thermal analysis report
+-----------------------
+Grid:                5 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0008076 W
+Peak temperature:    58.50 C
+Average temperature: 47.92 C
+Min temperature:     45.00 C
+Hottest region:      (119.98, 150.06) - (179.98, 225.10) um [row 2, col 2]
+Instances in hottest region (10 shown):
+  _424_                                    sky130_fd_sc_hd__dfxtp_1       1.468e-05 W
+  _417_                                    sky130_fd_sc_hd__dfxtp_1       1.305e-05 W
+  _440_                                    sky130_fd_sc_hd__dfxtp_1       1.26e-05 W
+  _429_                                    sky130_fd_sc_hd__dfxtp_1       1.26e-05 W
+  _433_                                    sky130_fd_sc_hd__dfxtp_1       1.203e-05 W
+  _445_                                    sky130_fd_sc_hd__dfxtp_1       1.186e-05 W
+  _295_                                    sky130_fd_sc_hd__o31ai_4       6.554e-06 W
+  _244_                                    sky130_fd_sc_hd__xnor2_1       4.581e-06 W
+  _298_                                    sky130_fd_sc_hd__o21ba_1       3.667e-06 W
+  _238_                                    sky130_fd_sc_hd__xnor2_1       3.641e-06 W

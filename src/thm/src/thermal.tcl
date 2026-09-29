@@ -25,6 +25,9 @@ proc analyze_thermal { args } {
   set hotspot_binary ""
   if { [info exists keys(-hotspot_binary)] } {
     set hotspot_binary $keys(-hotspot_binary)
+    if { [string index $hotspot_binary 0] eq "~" } {
+      set hotspot_binary [file normalize $hotspot_binary]
+    }
   }
   set hotspot_config ""
   if { [info exists keys(-hotspot_config)] } {
