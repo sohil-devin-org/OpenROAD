@@ -1324,12 +1324,11 @@ FloatPoint NesterovBaseCommon::getPhysicsGradient(const GCell* gCell) const
   if (watts <= 0.0f) {
     return FloatPoint(0, 0);
   }
-  // Energy term E = sum_i p_i * phi(x_i); its derivative pushes the cell
-  // down the potential gradient (away from the hot region). Nesterov moves
-  // cells along -gradient, so return +p * grad(phi) here, matching the sign
-  // convention of the wirelength/density gradients.
+  // Energy term E = sum_i p_i * phi(x_i). The stored "gradients" are descent
+  // directions (the WA wirelength gradient is min - max and the density term
+  // is the electric field), so return -p * grad(phi): away from hot regions.
   const FloatPoint g = physics_field_->gradientAt(gCell->dCx(), gCell->dCy());
-  const float scale = watts / mean_cell_power_w_;
+  const float scale = -watts / mean_cell_power_w_;
   return FloatPoint(scale * g.x, scale * g.y);
 }
 
