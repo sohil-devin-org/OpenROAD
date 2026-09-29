@@ -1,0 +1,90 @@
+THM 0001 Thermal.cpp:175           Unknown thermal config key '{}'. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L175
+THM 0002 Thermal.cpp:180           Invalid value '{}' for thermal config key '{}': {} ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L180
+THM 0003 Thermal.cpp:188           Thermal grid must be at least 2x2. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L188
+THM 0004 Thermal.cpp:202           Cannot open thermal config file {}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L202
+THM 0005 Thermal.cpp:227           Read thermal config from {} ({} lines). INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L227
+THM 0006 Thermal.cpp:234           Activity phase '{}' must have a positive duration. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L234
+THM 0010 Thermal.cpp:462           Thermal solver did not converge (residual {:.3e} after  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L462
+THM 0011 Thermal.cpp:487           Thermal runaway: peak temperature {:.1f} C exceeds the  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L487
+THM 0012 Thermal.cpp:516           Electrothermal loop did not converge in {} iterations  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L516
+THM 0013 Thermal.cpp:537           Transient analysis requires at least one activity phase  ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L537
+THM 0014 Thermal.cpp:546           Transient analysis: {} phases, time constant {:.3e} s, step  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L546
+THM 0020 Thermal.cpp:685           No design is loaded. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L685
+THM 0021 Thermal.cpp:688           The die area is not defined. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L688
+THM 0022 Thermal.cpp:892           Cannot load physics history {}: {} ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L892
+THM 0023 Thermal.cpp:896           Loaded reference physics history '{}' with {} snapshots. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L896
+THM 0024 Thermal.cpp:919           Physics derating enabled before any analysis; derates  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L919
+THM 0025 Thermal.cpp:972           Run analyze_thermal before report_physics. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L972
+THM 0026 Thermal.cpp:1050          Cannot write {}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1050
+THM 0027 Thermal.cpp:1061          Run analyze_thermal before write_thermal_map. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1061
+THM 0028 Thermal.cpp:1075          No IR-drop map is available. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1075
+THM 0029 Thermal.cpp:1080          No reference history loaded for the delta map. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1080
+THM 0030 Thermal.cpp:936           {}: peak {:.2f} C, avg {:.2f} C, max gradient {:.2f} C/mm,  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L936
+THM 0031 Thermal.cpp:950             die 1: peak {:.2f} C, avg {:.2f} C INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L950
+THM 0032 Thermal.cpp:957             worst IR drop {:.4f} V INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L957
+THM 0033 Thermal.cpp:959             WNS nominal {:.4e} s, derated {:.4e} s; TNS nominal {:.4e}  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L959
+THM 0034 Thermal.cpp:1086          Reference map size does not match. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1086
+THM 0035 Thermal.cpp:1093          Unknown map '{}'. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1093
+THM 0036 Thermal.cpp:1097          Cannot write {}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1097
+THM 0037 Thermal.cpp:1112          Wrote {} map to {}. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1112
+THM 0038 Thermal.cpp:1124          Cannot write physics history: {} ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1124
+THM 0039 Thermal.cpp:1126          Wrote {} snapshots to {}. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1126
+THM 0040 Thermal.cpp:1136          No physics history to animate. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L1136
+THM 0041 Thermal.cpp:381           Cannot open second die power map '{}'; the second die  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L381
+THM 0042 Thermal.cpp:399           Second die power map '{}' has {} values, expected {}x{};  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L399
+THM 0043 Thermal.cpp:411           Unknown second_die_power_source '{}' (uniform, mirror or  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/Thermal.cpp#L411
+THM 0050 thermal.i:87              Unknown corner '{}'. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.i#L87
+THM 0051 thermal.i:146             Unknown animation type '{}'. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.i#L146
+THM 0060 thermal.tcl:68            -grid requires {nx ny}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L68
+THM 0061 thermal.tcl:91            -phase requires {name scale duration_s ?activity_file?}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L91
+THM 0062 thermal.tcl:103           -set requires {key value}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L103
+THM 0063 thermal.tcl:181           set_physics_derating requires exactly one of -enable or -disable. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L181
+THM 0064 thermal.tcl:195           write_thermal_map requires -file. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L195
+THM 0065 thermal.tcl:201           Unknown map '$map'; expected one of temperature, leakage, derate, ir_drop, delta, em. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L201
+THM 0066 thermal.tcl:246           write_physics_animation requires -file. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L246
+THM 0067 thermal.tcl:252           Unknown animation type '$type'. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L252
+THM 0068 thermal.tcl:259           Unknown animation format '$format'; expected gif or mp4. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L259
+THM 0069 thermal.tcl:266           -scale requires {min_c max_c}. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L266
+THM 0070 PhysicsCoupling.cpp:105   Read activity scales for {} instances from {}{}{}. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L105
+THM 0071 PhysicsCoupling.cpp:178   {} instances have no liberty (timing/power) model and  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L178
+THM 0072 PhysicsCoupling.cpp:345   Applied physics derates to {} instances. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L345
+THM 0081 LeakageModel.cpp:822      Cannot open leakage fit file {}. WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L822
+THM 0082 LeakageModel.cpp:871      Loaded {} leakage fits from {}. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L871
+THM 0084 LeakageModel.cpp:1157     Cannot open derate fit file {}. WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1157
+THM 0085 LeakageModel.cpp:1198     Loaded derate fits from {} ({} temperature points, {}  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1198
+THM 0086 thermal.tcl:288           $cmd_arg '$arg' is not a non-negative integer. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.tcl#L288
+THM 0100 FiniteVolumeSolver.cpp:169 Thermal grid has no cells. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/FiniteVolumeSolver.cpp#L169
+THM 0101 FiniteVolumeSolver.cpp:178 Power map of die {} is {}x{} but the thermal grid is  ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/FiniteVolumeSolver.cpp#L178
+THM 0102 FiniteVolumeSolver.cpp:191 At least one of the top and bottom package resistances  ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/FiniteVolumeSolver.cpp#L191
+THM 0103 FiniteVolumeSolver.cpp:605 Transient time step must be positive ({} s). ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/FiniteVolumeSolver.cpp#L605
+THM 0130 LeakageModel.cpp:198      Liberty library {} of corner ({}, {} C, {} V) is not  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L198
+THM 0131 LeakageModel.cpp:749      Loaded liberty corners do not isolate temperature ({});  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L749
+THM 0132 LeakageModel.cpp:761      Fitting leakage(T) at process {} / {} V ({} temperatures);  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L761
+THM 0133 LeakageModel.cpp:794      No liberty cell has positive leakage at two or more  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L794
+THM 0134 LeakageModel.cpp:804      Fitted leakage(T) for {} cells over {}..{} C at process {} /  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L804
+THM 0135 LeakageModel.cpp:1044     Loaded liberty corners do not isolate temperature ({});  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1044
+THM 0136 LeakageModel.cpp:1074     No liberty cell has delay tables at two or more  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1074
+THM 0137 LeakageModel.cpp:699      Corner {} is not defined. WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L699
+THM 0138 LeakageModel.cpp:1082     Fitted delay(T) for {} cells over {}..{} C at process {}  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1082
+THM 0139 LeakageModel.cpp:1101     Loaded liberty corners do not isolate supply voltage;  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1101
+THM 0140 LeakageModel.cpp:1127     No liberty cell has delay tables at two or more supply  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1127
+THM 0141 LeakageModel.cpp:1135     Fitted delay(V) for {} cells over {}..{} V at process {}  INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/LeakageModel.cpp#L1135
+THM 0142 thermal.i:250             No liberty libraries are loaded for the requested corners. ERROR https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/thermal.i#L250
+THM 0160 animation.cpp:1003        Wrote {} {} animation frames ({}x{}, {:.1f}-{:.1f} C) to {}. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L1003
+THM 0161 animation.cpp:962         ffmpeg was not found on PATH; writing an animated GIF to {}  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L962
+THM 0162 animation.cpp:757         The compare animation needs a reference history  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L757
+THM 0163 animation.cpp:785         The stack animation needs a two-die history  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L785
+THM 0164 animation.cpp:921         Cannot open {} for writing. WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L921
+THM 0165 animation.cpp:993         ffmpeg failed (exit status {}); the frames are left in {}. WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L993
+THM 0166 animation.cpp:705         The physics history has no {} snapshots; animating all {}  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L705
+THM 0167 animation.cpp:723         Subsampled {} snapshots to {} animation frames. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/animation.cpp#L723
+THM 0190 PhysicsCoupling.cpp:62    Cannot open activity file {}; no per-instance activity  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L62
+THM 0191 PhysicsCoupling.cpp:91    Activity file {} line {}: expected 'instance_name  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L91
+THM 0192 PhysicsCoupling.cpp:185   {} of {} instances listed in activity file {} are not in  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L185
+THM 0193 PhysicsCoupling.cpp:210   Sum of per-instance power ({:.4e} W) differs from the  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L210
+THM 0194 PhysicsCoupling.cpp:509   Power net '{}' not found; IR drop is not included and  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L509
+THM 0195 PhysicsCoupling.cpp:516   No routed power grid found{}; IR drop is not included  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L516
+THM 0196 PhysicsCoupling.cpp:536   Nominal VDD {:.3f} V differs from the {:.3f} V liberty  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L536
+THM 0197 PhysicsCoupling.cpp:591   IR-drop analysis of net {} failed ({}); the supply  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L591
+THM 0198 PhysicsCoupling.cpp:618   IR-drop analysis of net {} produced no voltages on {};  WARN https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L618
+THM 0199 PhysicsCoupling.cpp:670   IR drop on {} ({}): worst {:.3e} V over {} grid points. INFO https://github.com/The-OpenROAD-Project/OpenROAD/tree/master/src/thm/src/PhysicsCoupling.cpp#L670

@@ -85,6 +85,9 @@
 #include "syn/synthesis.h"
 #include "tap/MakeTapcell.h"
 #include "tap/tapcell.h"
+#include "thm/MakeThermal.h"
+#include "thm/PlacementPhysics.h"
+#include "thm/Thermal.h"
 #include "upf/MakeUpf.h"
 #include "utl/Logger.h"
 #include "utl/MakeLogger.h"
@@ -138,6 +141,8 @@ OpenRoad::~OpenRoad()
   delete tapcell_;
   delete macro_placer_;
   delete example_;
+  delete placement_physics_;
+  delete thermal_;
   delete extractor_;
   delete detailed_router_;
   // Stop the web server first — its I/O threads access the database
@@ -276,6 +281,9 @@ void OpenRoad::init(Tcl_Interp* tcl_interp,
   icewall_ = new pad::ICeWall(db_, logger_);
   dft_ = new dft::Dft(db_, sta_, logger_);
   example_ = new exa::Example(db_, logger_);
+  thermal_ = new thm::Thermal(db_, sta_, pdnsim_, logger_);
+  placement_physics_ = new thm::PlacementPhysics(thermal_);
+  replace_->setPhysicsModel(placement_physics_);
   web_server_ = new web::WebServer(db_, sta_, logger_, tcl_interp);
   watermark_
       = new wmk::Watermark(db_, sta_, opendp_, estimate_parasitics_, logger_);
@@ -306,6 +314,7 @@ void OpenRoad::init(Tcl_Interp* tcl_interp,
   tap::initTapcell(tcl_interp);
   mpl::initMacroPlacer(tcl_interp);
   exa::initExample(tcl_interp);
+  thm::initThermal(tcl_interp);
   rcx::initOpenRCX(tcl_interp);
   pad::initICeWall(tcl_interp);
   rmp::initRestructure(tcl_interp);

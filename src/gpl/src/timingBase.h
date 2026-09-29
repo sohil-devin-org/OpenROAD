@@ -23,6 +23,7 @@ namespace gpl {
 
 class NesterovBaseCommon;
 class GNet;
+class PhysicsModel;
 
 class TimingBase
 {
@@ -52,6 +53,10 @@ class TimingBase
     repair_tns_end_percent_ = percent / 100.0f;
   }
 
+  // Physics-driven placement: nets slowed by temperature / IR drop get
+  // their timing weight multiplied by the model's factor.
+  void setPhysicsModel(PhysicsModel* physics) { physics_ = physics; }
+
   // updateNetWeight.
   // True: successfully reweighted gnets
   // False: no slacks found
@@ -70,6 +75,7 @@ class TimingBase
   float nets_percentage_ = 10;
   bool repair_timing_ = false;
   float repair_tns_end_percent_ = 0.01;
+  PhysicsModel* physics_ = nullptr;
   void initTimingOverflowChk();
 };
 

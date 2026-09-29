@@ -71,6 +71,8 @@ entries:
         title: VSRC Description
   - file: main/src/gpl/README
     title: Global Placement
+  - file: main/src/thm/README
+    title: Physics-Driven Placement
   - file: main/src/sta/README
     title: Static Timing Analyzer (external)
   - file: main/src/est/README

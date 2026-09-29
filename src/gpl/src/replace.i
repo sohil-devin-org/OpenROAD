@@ -2,6 +2,8 @@
 // Copyright (c) 2020-2025, The OpenROAD Authors
 
 %{
+#include <sstream>
+
 #include "ord/OpenRoad.hh"
 #include "gpl/Replace.h"
 #include "odb/db.h"
@@ -29,6 +31,20 @@ static gpl::PlaceOptions getOptions(
   checkFlag(flags, "-timing_driven_repair_timing", options.timingDrivenRepairTiming);
   checkFlag(flags, "-routability_driven", options.routabilityDrivenMode);
   checkFlag(flags, "-virtual_cts", options.virtualCtsMode);
+  checkFlag(flags, "-physics_driven", options.physicsDrivenMode);
+  checkKey(keys, "-physics_weight", options.physicsWeight);
+  checkKey(
+      keys, "-physics_checkpoint_interval", options.physicsCheckpointInterval);
+  checkKey(keys, "-physics_field_interval", options.physicsFieldInterval);
+  checkKey(keys, "-physics_start_overflow", options.physicsStartOverflow);
+  if (auto it = keys.find("-physics_grid"); it != keys.end()) {
+    // one size or "nx ny"
+    std::istringstream grid(it->second);
+    grid >> options.physicsGridX;
+    if (!(grid >> options.physicsGridY)) {
+      options.physicsGridY = options.physicsGridX;
+    }
+  }
   checkFlag(flags, "-routability_use_grt", options.routabilityUseRudy, false);
   checkFlag(
       flags, "-disable_revert_if_diverge", options.disableRevertIfDiverge);

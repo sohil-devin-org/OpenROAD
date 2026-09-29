@@ -27,11 +27,13 @@
 #include "boost/random/normal_distribution.hpp"
 #include "densityGradientBackend.h"
 #include "fft.h"
+#include "gpl/PhysicsModel.h"
 #include "gpl/Replace.h"
 #include "hpwlBackend.h"
 #include "nesterovPlace.h"
 #include "odb/db.h"
 #include "omp.h"
+#include "physicsField.h"
 #include "placerBase.h"
 #include "point.h"
 #include "utl/Logger.h"
@@ -1213,13 +1215,122 @@ NesterovPlaceVars::NesterovPlaceVars(const PlaceOptions& options,
       timingDrivenRepairTiming(options.timingDrivenRepairTiming),
       timingDrivenRepairTnsEndPercent(options.timingDrivenRepairTnsEndPercent),
       routability_driven_mode(options.routabilityDrivenMode),
-      disableRevertIfDiverge(options.disableRevertIfDiverge)
+      disableRevertIfDiverge(options.disableRevertIfDiverge),
+      physicsDrivenMode(options.physicsDrivenMode),
+      physicsWeight(options.physicsWeight),
+      physicsCheckpointInterval(options.physicsCheckpointInterval),
+      physicsFieldInterval(options.physicsFieldInterval),
+      physicsStartOverflow(options.physicsStartOverflow),
+      physicsGridX(options.physicsGridX),
+      physicsGridY(options.physicsGridY)
 {
 }
 
 ////////////////////////////////////////////////
 // NesterovBaseCommon
 ///////////////////////////////////////////////
+
+void NesterovBaseCommon::initPhysics(PhysicsModel* physics,
+                                     const NesterovPlaceVars& npVars)
+{
+  physics_model_ = physics;
+  if (physics == nullptr) {
+    physics_field_.reset();
+    return;
+  }
+  const Die& die = pbc_->getDie();
+  const odb::Rect core(die.coreLx(), die.coreLy(), die.coreUx(), die.coreUy());
+  physics_field_ = std::make_unique<PhysicsField>(core,
+                                                  npVars.physicsGridX,
+                                                  npVars.physicsGridY,
+                                                  physics->screeningLengthDbu(),
+                                                  log_);
+  updatePhysicsPower();
+  updatePhysicsField();
+  log_->info(GPL,
+             196,
+             "Physics-driven placement: {}x{} spreading grid, screening "
+             "length {:.1f} um, {} cells.",
+             physics_field_->nx(),
+             physics_field_->ny(),
+             pbc_->db()->getChip()->getBlock()->dbuToMicrons(
+                 static_cast<int>(physics->screeningLengthDbu())),
+             nbc_gcells_.size());
+}
+
+void NesterovBaseCommon::updatePhysicsPower()
+{
+  if (physics_model_ == nullptr) {
+    return;
+  }
+  cell_power_w_.assign(gCellStor_.size(), 0.0f);
+  double total = 0.0;
+  int powered = 0;
+  for (size_t i = 0; i < gCellStor_.size(); ++i) {
+    const GCell& cell = gCellStor_[i];
+    if (!cell.isInstance()) {
+      continue;
+    }
+    double watts = 0.0;
+    for (const Instance* inst : cell.insts()) {
+      watts += physics_model_->instancePowerW(inst->dbInst());
+    }
+    cell_power_w_[i] = static_cast<float>(watts);
+    if (watts > 0.0) {
+      total += watts;
+      ++powered;
+    }
+  }
+  mean_cell_power_w_ = powered > 0 ? static_cast<float>(total / powered) : 0.0f;
+}
+
+void NesterovBaseCommon::updatePhysicsField()
+{
+  if (physics_field_ == nullptr) {
+    return;
+  }
+  physics_field_->clearPower();
+  for (size_t i = 0; i < gCellStor_.size(); ++i) {
+    const float watts = cell_power_w_[i];
+    if (watts <= 0.0f) {
+      continue;
+    }
+    const GCell& cell = gCellStor_[i];
+    physics_field_->addPower(
+        cell.dLx(), cell.dLy(), cell.dUx(), cell.dUy(), watts);
+  }
+  physics_field_sweeps_ = physics_field_->solve(200, 1e-4);
+}
+
+float NesterovBaseCommon::getCellPowerW(const GCell* gCell) const
+{
+  if (cell_power_w_.empty() || gCellStor_.empty()) {
+    return 0.0f;
+  }
+  const auto idx = static_cast<size_t>(gCell - gCellStor_.data());
+  if (idx >= cell_power_w_.size()) {
+    return 0.0f;
+  }
+  return cell_power_w_[idx];
+}
+
+FloatPoint NesterovBaseCommon::getPhysicsGradient(const GCell* gCell) const
+{
+  if (physics_field_ == nullptr || mean_cell_power_w_ <= 0.0f
+      || !gCell->isInstance()) {
+    return FloatPoint(0, 0);
+  }
+  const float watts = getCellPowerW(gCell);
+  if (watts <= 0.0f) {
+    return FloatPoint(0, 0);
+  }
+  // Energy term E = sum_i p_i * phi(x_i). The stored "gradients" are descent
+  // directions (the WA wirelength gradient is min - max and the density term
+  // is the electric field), so return -p * grad(phi): away from hot regions.
+  const FloatPoint g = physics_field_->gradientAt(gCell->dCx(), gCell->dCy());
+  const float scale = -watts / mean_cell_power_w_;
+  return FloatPoint(scale * g.x, scale * g.y);
+}
 
 NesterovBaseCommon::NesterovBaseCommon(
     NesterovBaseVars nbVars,
@@ -3964,6 +4075,37 @@ void NesterovBase::updateGradients(std::vector<FloatPoint>& sumGrads,
   nbc_->getAllWireLengthGradientsWA(nb_gcells_, wireLengthGrads);
   density_grad_backend_->getCellGradients(nb_gcells_, densityGrads);
 
+  // Physics-driven placement: scale the thermal spreading force so that its
+  // L1 norm is physicsWeight times the wirelength gradient norm.
+  const bool use_physics = physics_active_ && nbc_->hasPhysics()
+                           && npVars_ != nullptr && npVars_->physicsDrivenMode;
+  if (use_physics) {
+    const size_t n = nb_gcells_.size();
+    physicsGrads_.resize(n);
+#pragma omp parallel for num_threads(nbc_->getNumThreads())
+    for (size_t i = 0; i < n; i++) {
+      physicsGrads_[i] = nbc_->getPhysicsGradient(nb_gcells_[i]);
+    }
+    float wl_sum = 0;
+    physicsGradSum_ = 0;
+    for (size_t i = 0; i < n; i++) {
+      wl_sum
+          += std::fabs(wireLengthGrads[i].x) + std::fabs(wireLengthGrads[i].y);
+      physicsGradSum_
+          += std::fabs(physicsGrads_[i].x) + std::fabs(physicsGrads_[i].y);
+    }
+    physicsPenalty_ = physicsGradSum_ > 0
+                          ? npVars_->physicsWeight * wl_sum / physicsGradSum_
+                          : 0.0f;
+    debugPrint(log_,
+               GPL,
+               "updateGrad",
+               1,
+               "PhysicsPenalty: {:g} PhysicsGradSum: {:g}",
+               physicsPenalty_,
+               physicsGradSum_);
+  }
+
   // Two-phase: parallel per-cell compute, then deterministic serial reduce.
 
   // Cache follower gradients for use when accumulating them into the master.
@@ -4018,6 +4160,10 @@ void NesterovBase::updateGradients(std::vector<FloatPoint>& sumGrads,
 
     sumGrads[i].x = wireLengthGrads[i].x + densityPenalty_ * densityGrads[i].x;
     sumGrads[i].y = wireLengthGrads[i].y + densityPenalty_ * densityGrads[i].y;
+    if (use_physics) {
+      sumGrads[i].x += physicsPenalty_ * physicsGrads_[i].x;
+      sumGrads[i].y += physicsPenalty_ * physicsGrads_[i].y;
+    }
 
     FloatPoint wireLengthPreCondi = nbc_->getWireLengthPreconditioner(gCell);
     FloatPoint densityPrecondi = getDensityPreconditioner(gCell);

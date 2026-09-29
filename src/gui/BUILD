@@ -89,6 +89,8 @@ QT_GUI_PLATFORMS = {
             "//src/odb/src/db",
             "//src/odb/src/defout",
             "//src/sta:opensta_lib",
+            "//src/thm",
+            "//src/thm:thm_core",
             "//src/utl",
             "//src/web:core",
             "@abseil-cpp//absl/synchronization",

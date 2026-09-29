@@ -121,6 +121,8 @@ cc_library(
         "src/mbff.cpp",
         "src/nesterovBase.cpp",
         "src/nesterovPlace.cpp",
+        "src/physicsField.cpp",
+        "src/physicsField.h",
         "src/placerBase.cpp",
         "src/replace.cpp",
         "src/routeBase.cpp",
@@ -147,6 +149,7 @@ cc_library(
         ],
     }),
     hdrs = [
+        "include/gpl/PhysicsModel.h",
         "include/gpl/Replace.h",
         "src/AbstractGraphics.h",
         "src/fft.h",
@@ -202,6 +205,7 @@ cc_library(
 cc_library(
     name = "gpl",
     hdrs = [
+        "include/gpl/PhysicsModel.h",
         "include/gpl/Replace.h",
     ],
     includes = [

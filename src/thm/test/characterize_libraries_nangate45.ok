@@ -1,0 +1,95 @@
+[INFO ODB-0227] LEF file: Nangate45/Nangate45.lef, created 22 layers, 27 vias, 135 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 624 components and 2752 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1248 connections.
+[INFO ODB-0133]     Created 581 nets and 1504 connections.
+Library corners
+  library                          process    temp (C)  VDD (V)
+  NangateOpenCellLibrary_fast      ff                0     1.25
+  NangateOpenCellLibrary           tt               25      1.1
+  NangateOpenCellLibrary_slow      ss              125     0.95
+[WARNING THM-0131] Loaded liberty corners do not isolate temperature (3 corners, 3 process tags (ff, ss, tt), temperatures {0, 25, 125} C, voltages {0.95, 1.1, 1.25} V); per-cell leakage(T) fits are not possible.  Using the default leakage beta 0.06931 /C (leakage doubling every ~10 C, Roy et al. Proc. IEEE 2003).
+[WARNING THM-0135] Loaded liberty corners do not isolate temperature (3 corners, 3 process tags (ff, ss, tt), temperatures {0, 25, 125} C, voltages {0.95, 1.1, 1.25} V); delay(T) is not fitted.  Using the default delay temperature coefficient 0.00503 /C (alpha-power law with mobility ~ T^-1.5, Sakurai-Newton JSSC 1990).
+[WARNING THM-0139] Loaded liberty corners do not isolate supply voltage; delay(V) is not fitted.  Using the default delay voltage coefficient -0.37 /V (alpha-power law, Sakurai-Newton JSSC 1990).
+Library characterization
+  leakage mode:                default
+  leakage cells fitted:        0
+  leakage family beta:         0.0693147 /C
+  leakage temperature range:   0..125 C
+  delay temperature mode:      default
+  delay voltage mode:          default
+  delay cells fitted:          0
+  delay temperature range:     0..125 C
+  derate nominal:              25 C / 1.1 V
+Library corners
+  library                          process    temp (C)  VDD (V)
+  NangateOpenCellLibrary           tt               25      1.1
+[WARNING THM-0131] Loaded liberty corners do not isolate temperature (1 corners, 1 process tag (tt), temperatures {25} C, voltages {1.1} V); per-cell leakage(T) fits are not possible.  Using the default leakage beta 0.06931 /C (leakage doubling every ~10 C, Roy et al. Proc. IEEE 2003).
+[WARNING THM-0135] Loaded liberty corners do not isolate temperature (1 corners, 1 process tag (tt), temperatures {25} C, voltages {1.1} V); delay(T) is not fitted.  Using the default delay temperature coefficient 0.00503 /C (alpha-power law with mobility ~ T^-1.5, Sakurai-Newton JSSC 1990).
+[WARNING THM-0139] Loaded liberty corners do not isolate supply voltage; delay(V) is not fitted.  Using the default delay voltage coefficient -0.37 /V (alpha-power law, Sakurai-Newton JSSC 1990).
+Library characterization
+  leakage mode:                default
+  leakage cells fitted:        0
+  leakage family beta:         0.0693147 /C
+  leakage temperature range:   25..25 C
+  delay temperature mode:      default
+  delay voltage mode:          default
+  delay cells fitted:          0
+  delay temperature range:     25..25 C
+  derate nominal:              25 C / 1.1 V
+Thermal configuration
+  ambient:              25 C
+  top resistance:       0.1 K/W
+  bottom resistance:    50 K/W
+  grid:                 8 x 8
+  dies:                 1
+  loop max iterations:  10
+  loop peak tolerance:  0.05 C
+  runaway temperature:  150 C
+  activity scale:       1
+  nominal VDD:          1.1 V
+  include IR drop:      yes
+  phases:               0
+  Leakage model: default beta 0.0693147 /C (no fit; leakage doubling per ~10 C, Roy et al. 2003), 3 corners
+  Derate model: nominal 25 C / 1.1 V, temperature default 0.00503 /C (Sakurai-Newton alpha-power law), voltage default -0.37 /V (Sakurai-Newton alpha-power law)
+
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] analyze_thermal: peak 25.00 C, avg 25.00 C, max gradient 0.01 C/mm, power 0.0002 W (leakage 0.0001 W), 2 loop iterations
+[INFO THM-0033]   WNS nominal 7.7580e-09 s, derated 7.7580e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+Physics report (analyze_thermal)
+  die 0: peak 25.0001 C, average 25 C
+  max lateral gradient:      0.00673701 C/mm
+  total power:               0.000221879 W
+  leakage power:             5.39821e-05 W
+  worst IR drop:             0 V
+  WNS nominal / derated:     7.75796e-09 / 7.75796e-09 s
+  TNS nominal / derated:     0 / 0 s
+  electrothermal iterations: 2 (converged)
+  EM lifetime factor:        1653.6
+  thermal clock skew delta:  0 s
+  derating:                  disabled
+  snapshots in history:      1
+  hottest instances:
+    _443_: 25.0001 C, 2.18607e-07 W, 1.1 V, derate 1
+    _473_: 25.0001 C, 7.21926e-07 W, 1.1 V, derate 1
+    _474_: 25.0001 C, 1.3582e-06 W, 1.1 V, derate 1
+    _478_: 25.0001 C, 1.29374e-06 W, 1.1 V, derate 1
+    _479_: 25.0001 C, 1.2846e-06 W, 1.1 V, derate 1
+
+Thermal configuration
+  ambient:              25 C
+  top resistance:       0.1 K/W
+  bottom resistance:    50 K/W
+  grid:                 8 x 8
+  dies:                 1
+  loop max iterations:  10
+  loop peak tolerance:  0.05 C
+  runaway temperature:  150 C
+  activity scale:       1
+  nominal VDD:          1.1 V
+  include IR drop:      yes
+  phases:               0
+  Leakage model: default beta 0.05 /C (no fit; leakage doubling per ~10 C, Roy et al. 2003), 3 corners
+  Derate model: nominal 25 C / 1.1 V, temperature default 0.002 /C (Sakurai-Newton alpha-power law), voltage default -0.5 /V (Sakurai-Newton alpha-power law)
+

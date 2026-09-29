@@ -1,0 +1,55 @@
+[INFO ODB-0227] LEF file: Nangate45/Nangate45.lef, created 22 layers, 27 vias, 135 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 624 components and 2752 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1248 connections.
+[INFO ODB-0133]     Created 581 nets and 1504 connections.
+[ERROR THM-0003] Thermal grid must be at least 2x2.
+THM-0003
+[ERROR THM-0060] -grid requires {nx ny}.
+THM-0060
+[ERROR THM-0001] Unknown thermal config key 'bogus_key'.
+THM-0001
+[ERROR THM-0002] Invalid value 'hot' for thermal config key 'ambient': stod: no conversion
+THM-0002
+[ERROR THM-0061] -phase requires {name scale duration_s ?activity_file?}.
+THM-0061
+[ERROR THM-0006] Activity phase 'burst' must have a positive duration.
+THM-0006
+[ERROR THM-0025] Run analyze_thermal before report_physics.
+THM-0025
+[ERROR THM-0064] write_thermal_map requires -file.
+THM-0064
+[ERROR THM-0065] Unknown map 'bogus'; expected one of temperature, leakage, derate, ir_drop, delta, em.
+THM-0065
+[ERROR THM-0063] set_physics_derating requires exactly one of -enable or -disable.
+THM-0063
+[ERROR THM-0063] set_physics_derating requires exactly one of -enable or -disable.
+THM-0063
+[ERROR THM-0013] Transient analysis requires at least one activity phase (set_thermal_config -phase).
+THM-0013
+[ERROR THM-0067] Unknown animation type 'bogus'.
+THM-0067
+[ERROR THM-0068] Unknown animation format 'avi'; expected gif or mp4.
+THM-0068
+[ERROR THM-0040] No physics history to animate.
+THM-0040
+[ERROR THM-0022] Cannot load physics history /nonexistent/history.json: cannot open /nonexistent/history.json for reading
+THM-0022
+Thermal configuration
+  ambient:              25 C
+  top resistance:       0.1 K/W
+  bottom resistance:    50 K/W
+  grid:                 4 x 4
+  dies:                 1
+  loop max iterations:  10
+  loop peak tolerance:  0.05 C
+  runaway temperature:  150 C
+  activity scale:       1
+  nominal VDD:          1.8 V
+  include IR drop:      yes
+  phases:               1
+    burst: scale 2, 0.01 s
+  Leakage model: 0 cell fits, family beta 0 /C, 0 corners
+  Derate model: nominal 25 C / 1.8 V, 0 temperature points, 0 voltage points, 0 cell fits
+

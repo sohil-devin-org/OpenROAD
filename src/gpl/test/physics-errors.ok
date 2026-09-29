@@ -1,0 +1,146 @@
+[INFO ODB-0227] LEF file: Nangate45/Nangate45.lef, created 22 layers, 27 vias, 135 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 624 components and 2752 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1248 connections.
+[INFO ODB-0133]     Created 581 nets and 1504 connections.
+[ERROR GPL-0188] -physics_weight requires -physics_driven.
+GPL-0188
+[ERROR STA-0572] -physics_weight '-1' is not a positive float.
+STA-0572
+[ERROR GPL-0201] -physics_checkpoint_interval '0' must be greater than 0.
+GPL-0201
+[ERROR STA-0574] -physics_grid 'abc' is not a positive integer.
+STA-0574
+[ERROR GPL-0203] -physics_grid '8 16 32' must be one size or {nx ny}.
+GPL-0203
+[ERROR GPL-0204] -physics_grid '8 0' must be greater than 0.
+GPL-0204
+[INFO GPL-0001] ---- Initialize GPL Main Data Structures
+[INFO GPL-0002] DBU: 2000
+[INFO GPL-0003] SiteSize: (  0.190  1.400 ) um
+[INFO GPL-0004] CoreBBox: ( 10.070 11.200 ) ( 90.250 91.000 ) um
+[INFO GPL-0016] Core area:                    6398.364 um^2
+[INFO GPL-0036] Movable instances area:        707.560 um^2
+[INFO GPL-0037] Total instances area:          737.884 um^2
+[INFO GPL-0035] Pin density area adjust:        36.420 um^2
+[INFO GPL-0032] ---- Initialize Region: Top-level
+[INFO GPL-0006] Number of instances:               624
+[INFO GPL-0007] Movable instances:                 510
+[INFO GPL-0008] Fixed instances:                   114
+[INFO GPL-0009] Dummy instances:                     0
+[INFO GPL-0010] Number of nets:                    581
+[INFO GPL-0011] Number of pins:                   1558
+[INFO GPL-0012] Die BBox:       (  0.000  0.000 ) ( 100.130 100.800 ) um
+[INFO GPL-0013] Placement BBox: ( 10.070 11.200 ) ( 90.250 91.000 ) um
+[INFO GPL-0014] Region name: top-level.
+[INFO GPL-0015] Region area:                  6398.364 um^2
+[INFO GPL-0017] Fixed instances area:           30.324 um^2
+[INFO GPL-0018] Movable instances area:        743.980 um^2
+[INFO GPL-0019] Utilization:                    11.683 %
+[INFO GPL-0020] Standard cells area:           743.980 um^2
+[INFO GPL-0021] Large instances area:            0.000 um^2
+[INFO GPL-0005] ---- Execute Conjugate Gradient Initial Placement.
+[INFO GPL-0051] Source of initial instance position counters:
+	Odb location = 510	Core center = 0	Region center = 0
+[InitialPlace]  Iter: 1 conjugate gradient residual: 0.00000011 HPWL: 15974720
+[InitialPlace]  Iter: 2 conjugate gradient residual: 0.00000011 HPWL: 13188045
+[InitialPlace]  Iter: 3 conjugate gradient residual: 0.00000011 HPWL: 12370518
+[InitialPlace]  Iter: 4 conjugate gradient residual: 0.00000010 HPWL: 12009818
+[InitialPlace]  Iter: 5 conjugate gradient residual: 0.00000010 HPWL: 11822995
+[INFO GPL-0033] ---- Initialize Nesterov Region: Top-level
+[INFO GPL-0023] Placement target density:       0.7000
+[INFO GPL-0024] Movable insts average area:      1.459 um^2
+[INFO GPL-0025] Ideal bin area:                  2.084 um^2
+[INFO GPL-0026] Ideal bin count:                  3070
+[INFO GPL-0027] Total bin area:               6398.364 um^2
+[INFO GPL-0028] Bin count (X, Y):          32 ,     32
+[INFO GPL-0029] Bin size (W * H):       2.506 *  2.494 um
+[INFO GPL-0030] Number of bins:                   1024
+[INFO GPL-0196] Physics-driven placement: 32x16 spreading grid, screening length 3.9 um, 510 cells.
+[INFO GPL-0084] ---- Execute Nesterov Global Placement.
+[WARNING THM-0024] Physics derating enabled before any analysis; derates will be applied at the next analyze_thermal.
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_0: peak 25.01 C, avg 25.00 C, max gradient 5.83 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 1 (iter 0): peak 25.01 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+[INFO GPL-0031] HPWL: Half-Perimeter Wirelength
+Iteration | Overflow |     HPWL (um) |  HPWL(%) |   Penalty | Group
+---------------------------------------------------------------
+        0 |   0.7457 |  4.677422e+03 |   +0.00% |  1.63e-13 |      
+[INFO GPL-0197] Physics force enabled at iteration 1 (overflow 0.746, weight 0.30).
+       10 |   0.5185 |  5.326302e+03 |  +13.87% |  2.66e-13 |      
+       20 |   0.5118 |  5.250185e+03 |   -1.43% |  4.33e-13 |      
+       30 |   0.5290 |  5.260456e+03 |   +0.20% |  7.06e-13 |      
+       40 |   0.5333 |  5.268833e+03 |   +0.16% |  1.15e-12 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_50: peak 25.00 C, avg 25.00 C, max gradient 1.11 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 2 (iter 50): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+       50 |   0.5348 |  5.265231e+03 |   -0.07% |  1.87e-12 |      
+       60 |   0.5333 |  5.259068e+03 |   -0.12% |  3.05e-12 |      
+       70 |   0.5341 |  5.262074e+03 |   +0.06% |  4.97e-12 |      
+       80 |   0.5337 |  5.260361e+03 |   -0.03% |  8.10e-12 |      
+       90 |   0.5338 |  5.260345e+03 |   -0.00% |  1.32e-11 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_100: peak 25.00 C, avg 25.00 C, max gradient 1.04 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 3 (iter 100): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+      100 |   0.5337 |  5.263682e+03 |   +0.06% |  2.15e-11 |      
+      110 |   0.5329 |  5.266335e+03 |   +0.05% |  3.50e-11 |      
+      120 |   0.5314 |  5.270805e+03 |   +0.08% |  5.70e-11 |      
+      130 |   0.5287 |  5.276302e+03 |   +0.10% |  9.28e-11 |      
+      140 |   0.5240 |  5.282526e+03 |   +0.12% |  1.51e-10 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_150: peak 25.00 C, avg 25.00 C, max gradient 1.14 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 4 (iter 150): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+      150 |   0.5182 |  5.288734e+03 |   +0.12% |  2.46e-10 |      
+      160 |   0.5127 |  5.288512e+03 |   -0.00% |  4.01e-10 |      
+      170 |   0.5083 |  5.278840e+03 |   -0.18% |  6.54e-10 |      
+      180 |   0.4971 |  5.290604e+03 |   +0.22% |  1.06e-09 |      
+      190 |   0.4720 |  5.299217e+03 |   +0.16% |  1.73e-09 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_200: peak 25.00 C, avg 25.00 C, max gradient 0.82 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 5 (iter 200): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+      200 |   0.4612 |  5.293506e+03 |   -0.11% |  2.82e-09 |      
+      210 |   0.4262 |  5.314547e+03 |   +0.40% |  4.60e-09 |      
+      220 |   0.3987 |  5.310672e+03 |   -0.07% |  7.49e-09 |      
+      230 |   0.3543 |  5.311474e+03 |   +0.02% |  1.22e-08 |      
+      240 |   0.3164 |  5.324404e+03 |   +0.24% |  1.85e-08 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_250: peak 25.00 C, avg 25.00 C, max gradient 0.48 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 6 (iter 250): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+      250 |   0.2840 |  5.320280e+03 |   -0.08% |  2.73e-08 |      
+      260 |   0.2455 |  5.337498e+03 |   +0.32% |  4.02e-08 |      
+      270 |   0.2211 |  5.362287e+03 |   +0.46% |  5.93e-08 |      
+      280 |   0.1887 |  5.392819e+03 |   +0.57% |  8.73e-08 |      
+      290 |   0.1552 |  5.417339e+03 |   +0.45% |  1.29e-07 |      
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_iter_300: peak 25.00 C, avg 25.00 C, max gradient 0.50 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 7 (iter 300): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+      300 |   0.1378 |  5.467892e+03 |   +0.93% |  1.89e-07 |      
+      310 |   0.1164 |  5.518563e+03 |   +0.93% |  2.79e-07 |      
+      316 |   0.0988 |  5.530282e+03 |          |  3.66e-07 |      
+---------------------------------------------------------------
+[INFO GPL-1001] Global placement finished at iteration 316
+[INFO GPL-1002] Placed Cell Area              743.9797
+[INFO GPL-1003] Available Free Area          6368.0400
+[INFO GPL-1004] Minimum Feasible Density        0.1200 (cell_area / free_area)
+[INFO GPL-1006]   Suggested Target Densities:
+[INFO GPL-1007]     - For 90% usage of free space: 0.1298
+[INFO GPL-1008]     - For 80% usage of free space: 0.1460
+[INFO GPL-1009]     - For 50% usage of free space: 0.2337
+[INFO GPL-1014] Final placement area: 743.98 (+0.00%)
+[INFO THM-0072] Applied physics derates to 0 instances.
+[INFO THM-0030] gpl_final: peak 25.00 C, avg 25.00 C, max gradient 0.47 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+[INFO GPL-0198] Physics checkpoint 8 (iter 316): peak 25.00 C, avg 25.00 C, power 0.0001 W, leakage 0.0000 W, IR drop 0.0000 V, WNS nominal 9.338e-09 s, derated 9.338e-09 s.
+[INFO GPL-0199] Physics-driven placement: 8 checkpoints, peak temperature 25.01 -> 25.00 C, derated WNS 9.338e-09 -> 9.338e-09 s.
+[INFO GPL-1018] Final HPWL (um): 5537.72
+
+[ERROR GPL-0189] -place_ios cannot be used with -physics_driven placement.
+GPL-0189

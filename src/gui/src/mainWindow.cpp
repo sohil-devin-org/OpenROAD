@@ -56,6 +56,7 @@
 #include "layoutViewer.h"
 #include "odb/db.h"
 #include "odb/dbObject.h"
+#include "physicsWidget.h"
 #include "ruler.h"
 #include "scriptWidget.h"
 #include "selectHighlightWindow.h"
@@ -107,6 +108,7 @@ MainWindow::MainWindow(bool load_settings, QWidget* parent)
           new BrowserWidget(viewers_->getModuleSettings(), controls_, this)),
       charts_widget_(new ChartsWidget(this)),
       help_widget_(new HelpWidget(this)),
+      physics_widget_(new PhysicsWidget(this)),
       find_dialog_(new FindObjectDialog(this)),
       goto_dialog_(new GotoLocationDialog(this, viewers_)),
       selection_timer_(std::make_unique<QTimer>()),
@@ -127,6 +129,7 @@ MainWindow::MainWindow(bool load_settings, QWidget* parent)
   addDockWidget(Qt::RightDockWidgetArea, clock_viewer_);
   addDockWidget(Qt::RightDockWidgetArea, charts_widget_);
   addDockWidget(Qt::RightDockWidgetArea, help_widget_);
+  addDockWidget(Qt::RightDockWidgetArea, physics_widget_);
 
   tabifyDockWidget(selection_browser_, script_);
   selection_browser_->hide();
@@ -137,9 +140,11 @@ MainWindow::MainWindow(bool load_settings, QWidget* parent)
   tabifyDockWidget(inspector_, clock_viewer_);
   tabifyDockWidget(inspector_, charts_widget_);
   tabifyDockWidget(inspector_, help_widget_);
+  tabifyDockWidget(inspector_, physics_widget_);
 
   drc_viewer_->hide();
   clock_viewer_->hide();
+  physics_widget_->hide();
 
   // Hook up all the signals/slots
   connect(viewers_,
@@ -563,6 +568,7 @@ void MainWindow::init(sta::dbSta* sta, const std::string& help_path)
   clock_viewer_->setSTA(sta);
   charts_widget_->setSTA(sta);
   help_widget_->init(help_path);
+  physics_widget_->setThermal(ord::OpenRoad::openRoad()->getThermal());
 
   // register descriptors
   auto* gui = web::Gui::get();
@@ -898,6 +904,7 @@ void MainWindow::createMenus()
   windows_menu_->addAction(hierarchy_widget_->toggleViewAction());
   windows_menu_->addAction(charts_widget_->toggleViewAction());
   windows_menu_->addAction(help_widget_->toggleViewAction());
+  windows_menu_->addAction(physics_widget_->toggleViewAction());
 
   auto option_menu = menuBar()->addMenu("&Options");
   option_menu->addAction(hide_option_);
@@ -1694,6 +1701,7 @@ void MainWindow::setLogger(utl::Logger* logger)
   clock_viewer_->setLogger(logger);
   charts_widget_->setLogger(logger);
   timing_widget_->setLogger(logger);
+  physics_widget_->setLogger(logger);
 }
 
 void MainWindow::fit()
