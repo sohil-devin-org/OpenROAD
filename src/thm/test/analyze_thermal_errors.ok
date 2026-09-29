@@ -9,6 +9,8 @@
 THM-0004
 [ERROR THM-0004] HotSpot executable "no_such_hotspot_binary" not found; use -hotspot_binary or add it to PATH.
 THM-0004
+[ERROR THM-0004] HotSpot executable "not_runnable_hotspot" not found; use -hotspot_binary or add it to PATH.
+THM-0004
 [WARNING THM-0013] No thermal results; run analyze_thermal first.
 has results: 0
 [ERROR THM-0008] No thermal results; run analyze_thermal first.

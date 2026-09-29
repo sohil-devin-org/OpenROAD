@@ -12,6 +12,18 @@ puts $msg
 catch { analyze_thermal -hotspot_binary no_such_hotspot_binary } msg
 puts $msg
 
+# A non-executable file on PATH is not a usable binary.
+set bin_dir [make_result_test_dir analyze_thermal_errors_bin]
+set stream [open [file join $bin_dir not_runnable_hotspot] w]
+puts $stream "not a program"
+close $stream
+file attributes [file join $bin_dir not_runnable_hotspot] -permissions 0644
+set saved_path $::env(PATH)
+set ::env(PATH) "$bin_dir:$saved_path"
+catch { analyze_thermal -hotspot_binary not_runnable_hotspot } msg
+puts $msg
+set ::env(PATH) $saved_path
+
 # Report before any analysis.
 report_thermal
 puts "has results: [thm::has_thermal_results]"

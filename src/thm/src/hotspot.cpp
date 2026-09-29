@@ -4,6 +4,7 @@
 #include "hotspot.h"
 
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include <cstdlib>
 #include <filesystem>
@@ -75,6 +76,13 @@ constexpr const char* kDefaultConfig
 // HotSpot's flp.h MAX_UNITS.
 constexpr size_t kMaxHotSpotUnits = 8192;
 
+bool isExecutable(const std::filesystem::path& path)
+{
+  std::error_code ec;
+  return std::filesystem::is_regular_file(path, ec)
+         && access(path.c_str(), X_OK) == 0;
+}
+
 std::string shellQuote(const std::string& arg)
 {
   std::string quoted = "'";
@@ -117,7 +125,7 @@ std::string HotSpotAdapter::findBinary(const std::string& binary) const
   std::error_code ec;
   if (binary.find('/') != std::string::npos) {
     const std::filesystem::path path(binary);
-    if (std::filesystem::is_regular_file(path, ec)) {
+    if (isExecutable(path)) {
       return std::filesystem::absolute(path, ec).string();
     }
     return "";
@@ -126,14 +134,17 @@ std::string HotSpotAdapter::findBinary(const std::string& binary) const
   if (path_env == nullptr) {
     return "";
   }
-  std::stringstream paths(path_env);
+  // An empty PATH entry (leading, trailing or doubled colon) means the
+  // current directory, as in execvp.
+  const std::string path_list = std::string(path_env) + ':';
+  std::stringstream paths(path_list);
   std::string dir;
   while (std::getline(paths, dir, ':')) {
     if (dir.empty()) {
-      continue;
+      dir = ".";
     }
     const std::filesystem::path candidate = std::filesystem::path(dir) / binary;
-    if (std::filesystem::is_regular_file(candidate, ec)) {
+    if (isExecutable(candidate)) {
       return candidate.string();
     }
   }
