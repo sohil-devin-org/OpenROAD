@@ -6,6 +6,7 @@
 #include "ord/OpenRoad.hh"
 #include "psm/pdnsim.h"
 #include "sta/Scene.hh"
+#include "thermal.h"
 
 namespace ord {
 psm::PDNSim*
@@ -120,6 +121,48 @@ set_inst_power(odb::dbInst* inst, Scene* corner, float power)
 {
   PDNSim* pdnsim = getPDNSim();
   pdnsim->setInstPower(inst, corner, power);
+}
+
+bool
+analyze_thermal_cmd(const char* hotspot_exe,
+                    const char* hotspot_config,
+                    const char* grid_file,
+                    const char* work_dir,
+                    int grid_rows,
+                    int grid_cols,
+                    double ambient_c,
+                    Scene* corner,
+                    int max_instances,
+                    const char* report_file)
+{
+  psm::ThermalSettings settings;
+  settings.hotspot_exe = hotspot_exe;
+  settings.hotspot_config = hotspot_config;
+  settings.grid_file = grid_file;
+  settings.work_dir = work_dir;
+  settings.grid_rows = grid_rows;
+  settings.grid_cols = grid_cols;
+  settings.ambient_c = ambient_c;
+  settings.corner = corner;
+  settings.max_instances = max_instances;
+  settings.report_file = report_file;
+
+  PDNSim* pdnsim = getPDNSim();
+  return pdnsim->analyzeThermal(settings);
+}
+
+void
+set_thermal_color_range_cmd(double min_c, double max_c)
+{
+  PDNSim* pdnsim = getPDNSim();
+  pdnsim->setThermalColorRange(std::make_pair(min_c, max_c));
+}
+
+void
+clear_thermal_color_range_cmd()
+{
+  PDNSim* pdnsim = getPDNSim();
+  pdnsim->setThermalColorRange(std::nullopt);
 }
 
 %} // inline

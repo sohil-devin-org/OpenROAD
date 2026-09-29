@@ -21,6 +21,8 @@
 #include "odb/dbTypes.h"
 #include "shape.h"
 #include "sta/Liberty.hh"
+#include "thermal.h"
+#include "thermalHeatMap.h"
 #include "utl/Logger.h"
 #include "web/core.h"
 #include "web/heatMap.h"
@@ -44,6 +46,11 @@ PDNSim::PDNSim(utl::Logger* logger,
   heatmap_source_ = web::registerHeatMapSource(
       "IR Drop", "IRDrop", "IRDrop", [this, sta, logger]() {
         return std::make_shared<IRDropDataSource>(this, sta, logger);
+      });
+  thermal_ = std::make_unique<ThermalAnalyzer>(logger, sta);
+  thermal_heatmap_source_ = web::registerHeatMapSource(
+      "Thermal", "Thermal", "Thermal", [this, logger]() {
+        return std::make_shared<ThermalDataSource>(this, logger);
       });
 }
 
@@ -149,6 +156,43 @@ void PDNSim::writeSpiceNetwork(odb::dbNet* net,
 {
   auto* solver = getIRSolver(net, false);
   solver->writeSpiceFile(source_type, spice_file, corner, voltage_source_file);
+}
+
+bool PDNSim::analyzeThermal(const ThermalSettings& settings)
+{
+  odb::dbBlock* block = db_->getChip() ? db_->getChip()->getBlock() : nullptr;
+  if (block == nullptr) {
+    logger_->error(utl::PSM, 200, "No design loaded.");
+  }
+  const bool ok = thermal_->analyze(block, settings, user_powers_);
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+  return ok;
+}
+
+const ThermalGrid& PDNSim::getThermalGrid() const
+{
+  return thermal_->getGrid();
+}
+
+const std::optional<ThermalHotRegion>& PDNSim::getThermalHotRegion() const
+{
+  return thermal_->getHotRegion();
+}
+
+void PDNSim::setThermalColorRange(
+    std::optional<std::pair<double, double>> range)
+{
+  thermal_->setColorRange(range);
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+}
+
+std::optional<std::pair<double, double>> PDNSim::getThermalColorRange() const
+{
+  return thermal_->getColorRange();
 }
 
 psm::IRSolver* PDNSim::getIRSolver(odb::dbNet* net, bool floorplanning)

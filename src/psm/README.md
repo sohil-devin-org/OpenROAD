@@ -180,6 +180,63 @@ insert_decap -target_cap target_cap [-net net_name] -cells list_of_decap_with_ca
 | `-net` | Power or ground net name. The decap cells will be inserted near the IR Drops of the net. |
 | `-cells` | List of even size of decap master cells and their capacitances. |
 
+### Analyze Thermal
+
+Runs a steady-state thermal analysis of the placed design with the external
+[HotSpot](https://github.com/uvahotspot/HotSpot) simulator. Per-instance
+power comes from OpenSTA (or `set_pdnsim_inst_power` overrides), is binned
+into a tile floorplan of the die, and HotSpot is run in grid mode. The
+resulting silicon-layer temperature grid is reported and shown in the
+`Thermal` heat map of the GUI. HotSpot is not bundled with OpenROAD.
+
+```tcl
+analyze_thermal
+    [-hotspot hotspot_exe]
+    [-hotspot_config config_file]
+    [-grid_file grid_steady_file]
+    [-work_dir dir]
+    [-grid {rows cols}]
+    [-ambient temperature]
+    [-corner corner]
+    [-max_instances count]
+    [-report_file file]
+```
+
+#### Options
+
+| Switch Name | Description |
+| ----- | ----- |
+| `-hotspot` | Path to the HotSpot executable. Defaults to the `HOTSPOT` environment variable, then `hotspot` on `PATH`. |
+| `-hotspot_config` | HotSpot configuration file passed with `-c`. Defaults to built-in settings. |
+| `-grid_file` | Read an existing HotSpot `-grid_steady_file` instead of running HotSpot. |
+| `-work_dir` | Directory for the generated HotSpot inputs and outputs. Defaults to a temporary directory that is removed after the run. |
+| `-grid` | HotSpot grid rows and columns (powers of 2). The default is `64 64`. |
+| `-ambient` | Ambient temperature in degrees Celsius. The default is 45. |
+| `-corner` | Corner used for power. Defaults to the command corner. |
+| `-max_instances` | Number of instances in the hottest region to report. The default is 10. |
+| `-report_file` | Write every instance in the hottest region to this file. |
+
+### Set Thermal Color Range
+
+Fixes the color range of the `Thermal` heat map in degrees Celsius so maps
+of different designs can be compared. `-auto` restores the default range
+from the minimum to maximum temperature of the current result.
+
+```tcl
+set_thermal_color_range
+    [-min temperature]
+    [-max temperature]
+    [-auto]
+```
+
+#### Options
+
+| Switch Name | Description |
+| ----- | ----- |
+| `-min` | Temperature in degrees Celsius mapped to the lowest color. |
+| `-max` | Temperature in degrees Celsius mapped to the highest color. |
+| `-auto` | Use the automatic range. |
+
 ## Source grid options
 
 The source grid models how power is going be delivered to the power grid.

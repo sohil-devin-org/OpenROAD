@@ -288,3 +288,105 @@ proc find_inst { inst_name } {
   return $inst
 }
 }
+
+sta::define_cmd_args "analyze_thermal" {
+  [-hotspot hotspot_exe]
+  [-hotspot_config config_file]
+  [-grid_file grid_steady_file]
+  [-work_dir dir]
+  [-grid {rows cols}]
+  [-ambient temperature]
+  [-corner corner]
+  [-max_instances count]
+  [-report_file file]
+}
+
+proc analyze_thermal { args } {
+  sta::parse_key_args "analyze_thermal" args \
+    keys {-hotspot -hotspot_config -grid_file -work_dir -grid -ambient \
+      -corner -max_instances -report_file} \
+    flags {}
+  sta::check_argc_eq0 "analyze_thermal" $args
+
+  set hotspot ""
+  if { [info exists keys(-hotspot)] } {
+    set hotspot $keys(-hotspot)
+  }
+  set hotspot_config ""
+  if { [info exists keys(-hotspot_config)] } {
+    set hotspot_config $keys(-hotspot_config)
+  }
+  set grid_file ""
+  if { [info exists keys(-grid_file)] } {
+    set grid_file $keys(-grid_file)
+  }
+  set work_dir ""
+  if { [info exists keys(-work_dir)] } {
+    set work_dir $keys(-work_dir)
+  }
+  set rows 64
+  set cols 64
+  if { [info exists keys(-grid)] } {
+    if { [llength $keys(-grid)] != 2 } {
+      utl::error PSM 201 "-grid must be a list of rows and columns."
+    }
+    lassign $keys(-grid) rows cols
+    sta::check_positive_integer "-grid" $rows
+    sta::check_positive_integer "-grid" $cols
+  }
+  set ambient 45.0
+  if { [info exists keys(-ambient)] } {
+    set ambient $keys(-ambient)
+    sta::check_float "-ambient" $ambient
+  }
+  set max_instances 10
+  if { [info exists keys(-max_instances)] } {
+    set max_instances $keys(-max_instances)
+    sta::check_cardinal "-max_instances" $max_instances
+  }
+  set report_file ""
+  if { [info exists keys(-report_file)] } {
+    set report_file $keys(-report_file)
+  }
+
+  return [psm::analyze_thermal_cmd \
+    $hotspot \
+    $hotspot_config \
+    $grid_file \
+    $work_dir \
+    $rows \
+    $cols \
+    $ambient \
+    [sta::parse_scene_or_default keys] \
+    $max_instances \
+    $report_file]
+}
+
+sta::define_cmd_args "set_thermal_color_range" {
+  [-min temperature]
+  [-max temperature]
+  [-auto]
+}
+
+proc set_thermal_color_range { args } {
+  sta::parse_key_args "set_thermal_color_range" args \
+    keys {-min -max} flags {-auto}
+  sta::check_argc_eq0 "set_thermal_color_range" $args
+
+  if { [info exists flags(-auto)] } {
+    if { [info exists keys(-min)] || [info exists keys(-max)] } {
+      utl::error PSM 202 "-auto cannot be combined with -min or -max."
+    }
+    psm::clear_thermal_color_range_cmd
+    return
+  }
+  if { ![info exists keys(-min)] || ![info exists keys(-max)] } {
+    utl::error PSM 203 "Both -min and -max must be specified, or use -auto."
+  }
+  sta::check_float "-min" $keys(-min)
+  sta::check_float "-max" $keys(-max)
+  if { $keys(-min) >= $keys(-max) } {
+    utl::error PSM 204 "-min must be less than -max."
+  }
+  psm::set_thermal_color_range_cmd $keys(-min) $keys(-max)
+}
