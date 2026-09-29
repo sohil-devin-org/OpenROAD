@@ -109,8 +109,11 @@ reported by `report_physics`.  Requirements, as for `analyze_power_grid`:
   bterms, `set_pdnsim_source_settings`, or the generated full-grid sources
   when the block has neither).
 
-The net voltage is taken from PDNSim (voltage-source file, SDC or liberty
-PVT).  When no grid, net or source is available the analysis is skipped with
+PDNSim adds user-supplied instance powers to the OpenSTA power it computes
+itself, so `thm` passes only the difference between the temperature-aware
+power and the corner power of every instance; the grid therefore sees
+exactly the thermal power (`report_physics` total).  The net voltage is
+taken from PDNSim (voltage-source file, SDC or liberty PVT).  When no grid, net or source is available the analysis is skipped with
 one `THM` warning, `vdd_v` stays at `-nominal_vdd` and the worst IR drop is
 0.  The power-grid resistance is temperature independent in this version:
 PDNSim has no public hook to scale its resistors, so `em.metal_tcr_per_k` is

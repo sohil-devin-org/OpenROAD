@@ -344,11 +344,15 @@ void DerateApplier::apply(const InstancePhysicsMap& state)
   applied_ = !applied_derates_.empty();
   logger_->info(utl::THM,
                 72,
-                "Applied physics derates to {} instances ({} updated, {} "
-                "restored to nominal).",
-                applied_derates_.size(),
-                changed,
-                restored);
+                "Applied physics derates to {} instances.",
+                applied_derates_.size());
+  debugPrint(logger_,
+             utl::THM,
+             "derate",
+             1,
+             "Derate update: {} changed, {} restored to nominal.",
+             changed,
+             restored);
 }
 
 void DerateApplier::clear()
@@ -530,13 +534,25 @@ bool IrDropCoupling::run(odb::dbBlock* block,
                   op_cond->voltage());
   }
   // Feed the temperature-aware powers to PDNSim so that hot (leaky) regions
-  // draw more current.  The net voltage is left to PDNSim (voltage-source
-  // file, SDC or liberty PVT) so that its own configuration is respected.
+  // draw more current.  PDNSim adds user powers on top of the OpenSTA power
+  // it computes itself for every instance with a liberty cell, so only the
+  // difference between the thermal power and the OpenSTA power is passed
+  // (and only where it is non-zero); the grid then sees exactly the thermal
+  // power.  The net voltage is left to PDNSim (voltage-source file, SDC or
+  // liberty PVT).
+  sta::dbNetwork* network = sta_->getDbNetwork();
   for (const auto& [inst, phys] : state) {
-    psm_->setInstPower(
-        inst,
-        corner,
-        static_cast<float>(phys.dynamic_power_w + phys.leakage_power_w));
+    double sta_power_w = 0.0;
+    sta::Instance* sta_inst = network->dbToSta(inst);
+    if (sta_inst != nullptr && network->libertyCell(sta_inst) != nullptr) {
+      sta_power_w = sta_->power(sta_inst, corner).total();
+    }
+    const double thermal_power_w = phys.dynamic_power_w + phys.leakage_power_w;
+    const double delta_w = thermal_power_w - sta_power_w;
+    if (std::abs(delta_w) <= 1e-9 * std::max(thermal_power_w, sta_power_w)) {
+      continue;
+    }
+    psm_->setInstPower(inst, corner, static_cast<float>(delta_w));
   }
   try {
     psm_->analyzePowerGrid(net,
