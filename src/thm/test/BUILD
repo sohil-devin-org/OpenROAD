@@ -9,6 +9,7 @@ TESTS = [
     "analyze_thermal_gcd",
     "thermal_config_errors",
     "thermal_map_gcd",
+    "physics_flow_gcd",
 ]
 
 filegroup(
