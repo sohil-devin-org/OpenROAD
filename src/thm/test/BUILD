@@ -8,6 +8,7 @@ package(features = ["layering_check"])
 TESTS = [
     "analyze_thermal_gcd",
     "analyze_thermal_ir_gcd",
+    "analyze_thermal_two_die",
     "physics_derating_gcd",
     "thermal_config_errors",
     "thermal_map_gcd",
@@ -56,6 +57,20 @@ cc_test(
         "//src/odb/src/db",
         "//src/thm",
         "//src/thm:thm_core",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "finite_volume_solver_test",
+    srcs = [
+        "cpp/FiniteVolumeSolverTest.cpp",
+    ],
+    deps = [
+        "//src/odb/src/db",
+        "//src/thm:thm_core",
+        "//src/utl",
         "@googletest//:gtest",
         "@googletest//:gtest_main",
     ],

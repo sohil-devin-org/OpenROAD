@@ -8,6 +8,7 @@ or_integration_tests(
   TESTS
     analyze_thermal_gcd
     analyze_thermal_ir_gcd
+    analyze_thermal_two_die
     physics_derating_gcd
     thermal_config_errors
     thermal_map_gcd
@@ -43,3 +44,18 @@ gtest_discover_tests(electromigration_test
 )
 
 add_dependencies(build_and_test electromigration_test)
+
+add_executable(finite_volume_solver_test cpp/FiniteVolumeSolverTest.cpp)
+
+target_link_libraries(finite_volume_solver_test
+  GTest::gtest
+  GTest::gtest_main
+  thm_core
+  utl_lib
+)
+
+gtest_discover_tests(finite_volume_solver_test
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_dependencies(build_and_test finite_volume_solver_test)
