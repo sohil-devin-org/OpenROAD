@@ -467,7 +467,11 @@ void Thermal::electrothermalLoop(const AnalyzeOptions& options,
                     result.iterations);
     }
     updateInstanceTemperatures();
-    // 3. leakage update happens on the next extract; check convergence.
+    // 3. leakage at the solved temperatures, so the published power, power
+    //    map and convergence test all belong to this temperature field.
+    power_extractor_->updateLeakage(
+        *leakage_model_, nominal_temp_c_, inst_state_);
+    buildPowerMaps();
     const double peak = grid_.peak(0);
     const double leakage = power_extractor_->leakagePowerW(inst_state_);
     metrics.total_power_w = power_extractor_->totalPowerW(inst_state_);
@@ -572,6 +576,8 @@ void Thermal::runTransient(const AnalyzeOptions& options,
       buildPowerMaps();
       solver_->stepTransient(power_maps_, config_, step_dt, grid_);
       updateInstanceTemperatures();
+      power_extractor_->updateLeakage(
+          *leakage_model_, nominal_temp_c_, inst_state_);
       time += step_dt;
       if (options.record) {
         PhysicsMetrics step_metrics = metrics;
@@ -598,6 +604,7 @@ void Thermal::runTransient(const AnalyzeOptions& options,
   }
   power_extractor_->setActivityScale(config_.default_activity_scale);
   power_extractor_->readActivityFile(config_.activity_file, "");
+  buildPowerMaps();
   metrics.peak_temp_c.assign(dies, 0.0);
   metrics.avg_temp_c.assign(dies, 0.0);
   for (int d = 0; d < dies; ++d) {

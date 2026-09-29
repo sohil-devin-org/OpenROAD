@@ -14,13 +14,14 @@ namespace thm {
 // Per-instance coupled physics state at the last analysis.
 struct InstancePhysics
 {
-  double dynamic_power_w = 0.0;  // internal + switching (from OpenSTA)
-  double leakage_power_w = 0.0;  // leakage at the local temperature
-  double temperature_c = 0.0;    // local temperature of the active layer
-  double vdd_v = 0.0;            // local supply voltage (nominal or IR)
-  double derate = 1.0;           // delay multiplier f_T(T) * f_V(V)
-  double slack_nominal_s = 0.0;  // worst pin slack without derates
-  double slack_derated_s = 0.0;  // worst pin slack with derates
+  double dynamic_power_w = 0.0;    // internal + switching (from OpenSTA)
+  double leakage_power_w = 0.0;    // leakage at the local temperature
+  double library_leakage_w = 0.0;  // OpenSTA leakage at library temperature
+  double temperature_c = 0.0;      // local temperature of the active layer
+  double vdd_v = 0.0;              // local supply voltage (nominal or IR)
+  double derate = 1.0;             // delay multiplier f_T(T) * f_V(V)
+  double slack_nominal_s = 0.0;    // worst pin slack without derates
+  double slack_derated_s = 0.0;    // worst pin slack with derates
   int die = 0;
 };
 

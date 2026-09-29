@@ -74,6 +74,11 @@ class PowerExtractor
                const LeakageModel& leakage_model,
                double nominal_temp_c,
                InstancePhysicsMap& state);
+  // Re-evaluates leakage_power_w at the current temperature_c of every
+  // instance without querying OpenSTA again.
+  void updateLeakage(const LeakageModel& leakage_model,
+                     double nominal_temp_c,
+                     InstancePhysicsMap& state) const;
 
   double totalPowerW(const InstancePhysicsMap& state) const;
   double leakagePowerW(const InstancePhysicsMap& state) const;

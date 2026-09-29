@@ -154,6 +154,7 @@ void PowerExtractor::extract(odb::dbBlock* block,
     if (sta_inst == nullptr || network->libertyCell(sta_inst) == nullptr) {
       phys.dynamic_power_w = 0.0;
       phys.leakage_power_w = 0.0;
+      phys.library_leakage_w = 0.0;
       ++missing;
       continue;
     }
@@ -169,6 +170,7 @@ void PowerExtractor::extract(odb::dbBlock* block,
       }
     }
     phys.dynamic_power_w = scale * (result.internal() + result.switching());
+    phys.library_leakage_w = result.leakage();
     const double temp
         = phys.temperature_c > 0 ? phys.temperature_c : nominal_temp_c;
     phys.leakage_power_w = leakage_model.leakageAt(
@@ -223,6 +225,20 @@ double PowerExtractor::totalPowerW(const InstancePhysicsMap& state) const
     total += phys.dynamic_power_w + phys.leakage_power_w;
   }
   return total;
+}
+
+void PowerExtractor::updateLeakage(const LeakageModel& leakage_model,
+                                   double nominal_temp_c,
+                                   InstancePhysicsMap& state) const
+{
+  for (auto& [inst, phys] : state) {
+    const double temp
+        = phys.temperature_c > 0 ? phys.temperature_c : nominal_temp_c;
+    phys.leakage_power_w = leakage_model.leakageAt(inst->getMaster()->getName(),
+                                                   phys.library_leakage_w,
+                                                   nominal_temp_c,
+                                                   temp);
+  }
 }
 
 double PowerExtractor::leakagePowerW(const InstancePhysicsMap& state) const
