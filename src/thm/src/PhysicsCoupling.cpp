@@ -375,12 +375,34 @@ ClockSkewAnalyzer::ClockSkewAnalyzer(sta::dbSta* sta, utl::Logger* logger)
 {
 }
 
+double ClockSkewAnalyzer::worstSkewS()
+{
+  const sta::Sdc* sdc = sta_->cmdSdc();
+  if (sdc == nullptr || sdc->clocks().empty()) {
+    return 0.0;
+  }
+  sta_->ensureGraph();
+  sta_->updateTiming(false);
+  // Worst source/target register clock-arrival difference over all clocks,
+  // late (setup) analysis, including the register internal clock latency.
+  return sta_->findWorstClkSkew(sta::SetupHold::max(),
+                                /*include_internal_latency=*/true);
+}
+
 double ClockSkewAnalyzer::skewDeltaS(DerateApplier& derates,
                                      const InstancePhysicsMap& state)
 {
-  // Thermal clock skew is reported by the STA/PDNSim coupling component;
-  // without it the delta is zero.
-  return 0.0;
+  const bool was_applied = derates.isApplied();
+  if (was_applied) {
+    derates.clear();
+  }
+  const double nominal = worstSkewS();
+  derates.apply(state);
+  const double derated = worstSkewS();
+  if (!was_applied) {
+    derates.clear();
+  }
+  return derated - nominal;
 }
 
 }  // namespace thm
