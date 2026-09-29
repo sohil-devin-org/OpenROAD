@@ -151,6 +151,23 @@ void Thermal::setConfigValue(const std::string& key, const std::string& value)
       {"activity_file", str(c.activity_file)},
       {"nominal_vdd", dbl(c.nominal_vdd_v)},
       {"include_ir_drop", boolean(c.include_ir_drop)},
+      {"power_net", str(c.ir_power_net)},
+      {"vsrc", str(c.ir_vsrc_file)},
+      {"leakage_beta_per_c",
+       [this, &c](const std::string& v) {
+         c.leakage_beta_per_c = std::stod(v);
+         leakage_model_->setDefaultBetaPerC(c.leakage_beta_per_c);
+       }},
+      {"delay_tempco_per_c",
+       [this, &c](const std::string& v) {
+         c.delay_tempco_per_c = std::stod(v);
+         derate_model_->setDefaultTempcoPerC(c.delay_tempco_per_c);
+       }},
+      {"delay_vcoef_per_v",
+       [this, &c](const std::string& v) {
+         c.delay_vcoef_per_v = std::stod(v);
+         derate_model_->setDefaultVcoefPerV(c.delay_vcoef_per_v);
+       }},
   };
   auto it = setters.find(key);
   if (it == setters.end()) {
@@ -526,12 +543,40 @@ void Thermal::runTiming(PhysicsMetrics& metrics)
   }
   derate_applier_->timingSummary(metrics.wns_nominal_s, metrics.tns_nominal_s);
   derate_applier_->instanceSlacks(inst_state_, /*derated=*/false);
+  ClockSkewAnalyzer skew_analyzer(sta_, logger_);
+  const double skew_nominal_s = skew_analyzer.worstSkewS();
   // Derated timing.
   derate_applier_->apply(inst_state_);
   derate_applier_->timingSummary(metrics.wns_derated_s, metrics.tns_derated_s);
   derate_applier_->instanceSlacks(inst_state_, /*derated=*/true);
+  metrics.clock_skew_delta_s = skew_analyzer.worstSkewS() - skew_nominal_s;
   if (!derating_enabled_) {
     derate_applier_->clear();
+  }
+  // Electromigration lifetime of the supply grid relative to the design at
+  // its reference condition (leakage at the STA nominal temperature, no
+  // self-heating, no IR drop).  The current density proxy is the total
+  // supply current I = P / V (Black's equation uses J ~ I for a fixed grid):
+  // actual  I   = P_total / (V_nom - worst IR drop)
+  // reference I = (P_dynamic + P_leakage(T_nom)) / V_nom
+  // evaluated at the peak die temperature versus the EM reference
+  // temperature (ThermalConfig::em).
+  double power_ref_w = 0.0;
+  double power_w = 0.0;
+  for (const auto& [inst, phys] : inst_state_) {
+    power_w += phys.dynamic_power_w + phys.leakage_power_w;
+    power_ref_w += phys.dynamic_power_w
+                   + leakage_model_->leakageAt(inst->getMaster()->getName(),
+                                               phys.leakage_power_w,
+                                               phys.temperature_c,
+                                               nominal_temp_c_);
+  }
+  const double v_nom = config_.nominal_vdd_v;
+  const double v_min = std::max(v_nom - metrics.worst_ir_drop_v, 1e-3 * v_nom);
+  if (power_ref_w > 0.0 && v_nom > 0.0) {
+    const ElectromigrationModel em(config_.em);
+    metrics.em_lifetime_factor = em.relativeLifetime(
+        power_w / v_min, metrics.peakTemp(), power_ref_w / v_nom);
   }
 }
 
@@ -548,6 +593,9 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (options.corner != nullptr) {
     power_extractor_->setCorner(options.corner);
   }
+  derate_applier_->setCorner(power_extractor_->corner());
+  ir_coupling_->setCorner(power_extractor_->corner());
+  power_extractor_->readActivityFile(config_.activity_file, "");
   for (PhysicsObserver* obs : observers_) {
     obs->onAnalysisBegin(options.label);
   }
@@ -586,6 +634,10 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (options.include_timing) {
     runTiming(metrics);
   }
+  // Electromigration: Black's equation per tile of the bottom die, with the
+  // IR-drop current proxy when it is available (see
+  // ElectromigrationModel::tileLifetimeMap); worst tile vs the reference.
+  metrics.em_lifetime_factor = ElectromigrationModel::worstFactor(emRiskMap(0));
   metrics.runtime_s
       = std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
             .count();
@@ -714,20 +766,20 @@ const MapSnapshot* Thermal::irDropMap() const
 
 MapSnapshot Thermal::emRiskMap(int die) const
 {
-  // Relative lifetime of the metal at every tile assuming uniform current
-  // density: only the temperature term of Black's equation varies.
-  MapSnapshot map;
-  map.name = "em";
-  map.units = "";
-  map.die = die;
-  map.nx = grid_.nx();
-  map.ny = grid_.ny();
-  map.values = grid_.activeLayer(die);
+  // Relative lifetime of the metal at every tile: Arrhenius temperature term
+  // of Black's equation, times the current term from the tile current
+  // I = P_tile / VDD_tile when an IR-drop map is available (uniform current
+  // otherwise).
   ElectromigrationModel em(config_.em);
-  for (double& v : map.values) {
-    v = em.relativeLifetime(1.0, v, 1.0);
-  }
-  return map;
+  const PowerMap empty(grid_.nx(), grid_.ny());
+  const PowerMap& power = die >= 0 && die < static_cast<int>(power_maps_.size())
+                              ? power_maps_[die]
+                              : empty;
+  return em.tileLifetimeMap(grid_,
+                            power,
+                            has_ir_map_ && die == 0 ? &ir_map_ : nullptr,
+                            config_.nominal_vdd_v,
+                            die);
 }
 
 void Thermal::loadReference(const std::string& path)

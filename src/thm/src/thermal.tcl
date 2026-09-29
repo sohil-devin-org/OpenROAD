@@ -19,6 +19,8 @@ sta::define_cmd_args "set_thermal_config" { \
     [-runaway_temperature temp_c] \
     [-nominal_vdd volts] \
     [-include_ir_drop] [-no_ir_drop] \
+    [-vsrc file] \
+    [-power_net net] \
     [-leakage_fits file] \
     [-derate_fits file] \
     [-config_file file] \
@@ -31,6 +33,7 @@ proc set_thermal_config { args } {
           -bond_conductivity -thinned_die_thickness -second_die_power \
           -activity_scale -activity_file -phase -loop_max_iterations \
           -loop_peak_tolerance -runaway_temperature -nominal_vdd \
+          -vsrc -power_net \
           -leakage_fits -derate_fits -config_file -set} \
     flags {-two_die -single_die -clear_phases -include_ir_drop -no_ir_drop \
            -report}
@@ -52,6 +55,8 @@ proc set_thermal_config { args } {
     -loop_peak_tolerance loop_peak_tolerance
     -runaway_temperature runaway_temperature
     -nominal_vdd nominal_vdd
+    -vsrc vsrc
+    -power_net power_net
   } {
     if { [info exists keys($opt)] } {
       thm::set_config_value_cmd $key $keys($opt)
@@ -288,4 +293,33 @@ proc reset_thermal { args } {
   sta::parse_key_args "reset_thermal" args keys {} flags {}
   thm::reset_thermal_cmd
 }
+}
+
+################################################################
+# Library characterization: leakage(T) and delay(T, V) fits from the loaded
+# liberty corners.
+
+sta::define_cmd_args "characterize_thermal_libraries" { \
+    [-leakage_json file] \
+    [-derate_json file] \
+    [-corners {name ...}]}
+
+proc characterize_thermal_libraries { args } {
+  sta::parse_key_args "characterize_thermal_libraries" args \
+    keys {-leakage_json -derate_json -corners} flags {}
+  sta::check_argc_eq0 "characterize_thermal_libraries" $args
+  set corners {}
+  if { [info exists keys(-corners)] } {
+    set corners $keys(-corners)
+  }
+  set leakage_json ""
+  if { [info exists keys(-leakage_json)] } {
+    set leakage_json $keys(-leakage_json)
+  }
+  set derate_json ""
+  if { [info exists keys(-derate_json)] } {
+    set derate_json $keys(-derate_json)
+  }
+  return [thm::characterize_libraries_cmd [join $corners " "] $leakage_json \
+    $derate_json]
 }

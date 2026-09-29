@@ -7,9 +7,13 @@ package(features = ["layering_check"])
 
 TESTS = [
     "analyze_thermal_gcd",
+    "analyze_thermal_ir_gcd",
     "analyze_thermal_two_die",
+    "physics_derating_gcd",
     "thermal_config_errors",
     "thermal_map_gcd",
+    "physics_flow_gcd",
+    "characterize_libraries_nangate45",
     "write_physics_animation_gcd",
 ]
 
@@ -48,12 +52,39 @@ cc_test(
 )
 
 cc_test(
+    name = "electromigration_test",
+    srcs = [
+        "cpp/ElectromigrationTest.cpp",
+    ],
+    deps = [
+        "//src/odb/src/db",
+        "//src/thm",
+        "//src/thm:thm_core",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
     name = "finite_volume_solver_test",
     srcs = [
         "cpp/FiniteVolumeSolverTest.cpp",
     ],
     deps = [
         "//src/odb/src/db",
+        "//src/thm:thm_core",
+        "//src/utl",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "leakage_model_test",
+    srcs = [
+        "cpp/LeakageModelTest.cpp",
+    ],
+    deps = [
         "//src/thm:thm_core",
         "//src/utl",
         "@googletest//:gtest",

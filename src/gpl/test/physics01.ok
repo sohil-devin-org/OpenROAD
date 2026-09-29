@@ -194,7 +194,7 @@ Physics report (gpl_final)
   WNS nominal / derated:     9.33928e-09 / 9.33928e-09 s
   TNS nominal / derated:     0 / 0 s
   electrothermal iterations: 1 (converged)
-  EM lifetime factor:        1
+  EM lifetime factor:        182.842
   thermal clock skew delta:  0 s
   derating:                  disabled
   snapshots in history:      8

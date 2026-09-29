@@ -1,0 +1,79 @@
+[INFO ODB-0227] LEF file: Nangate45/Nangate45.lef, created 22 layers, 27 vias, 135 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 624 components and 2752 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 1248 connections.
+[INFO ODB-0133]     Created 581 nets and 1504 connections.
+[INFO THM-0085] Loaded derate fits from physics_derating_gcd_fits.json (2 temperature points, 2 voltage points, 0 cells).
+Thermal configuration
+  ambient:              45 C
+  top resistance:       0.1 K/W
+  bottom resistance:    50 K/W
+  grid:                 16 x 16
+  dies:                 1
+  loop max iterations:  10
+  loop peak tolerance:  0.05 C
+  runaway temperature:  150 C
+  activity scale:       1
+  nominal VDD:          1.1 V
+  include IR drop:      yes
+  phases:               0
+  Leakage model: 0 cell fits, family beta 0 /C, 0 corners
+  Derate model: nominal 25 C / 1.1 V, temperature fitted (2 points, 0..0 C, 0 cell fits), voltage fitted (2 points, 0 cell fits)
+
+[INFO PSM-0040] All shapes on net VDD are connected.
+[INFO PSM-0015] Reading location of sources from: Vsrc_gcd_vdd.loc.
+########## IR report #################
+Net              : VDD
+Corner           : default
+Total power      : 1.38e-04 W
+Supply voltage   : 1.10e+00 V
+Worstcase voltage: 1.10e+00 V
+Average voltage  : 1.10e+00 V
+Average IR drop  : 3.13e-04 V
+Worstcase IR drop: 5.04e-04 V
+Percentage drop  : 0.05 %
+######################################
+[INFO THM-0199] IR drop on VDD (metal1): worst 5.037e-04 V over 2272 grid points.
+[INFO THM-0072] Applied physics derates to 624 instances.
+[INFO THM-0030] ir: peak 45.00 C, avg 45.00 C, max gradient 0.01 C/mm, power 0.0001 W (leakage 0.0000 W), 1 loop iterations
+[INFO THM-0032]   worst IR drop 0.0005 V
+[INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3248e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
+Group                  Internal  Switching    Leakage      Total
+                          Power      Power      Power      Power (Watts)
+----------------------------------------------------------------
+Sequential             2.54e-05   1.36e-06   2.77e-06   2.96e-05  21.4%
+Combinational          6.04e-05   3.59e-05   1.25e-05   1.09e-04  78.6%
+Clock                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Macro                  0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+Pad                    0.00e+00   0.00e+00   0.00e+00   0.00e+00   0.0%
+----------------------------------------------------------------
+Total                  8.59e-05   3.73e-05   1.53e-05   1.38e-04 100.0%
+                          62.1%      26.9%      11.0%
+PASS: instance power sum matches the OpenSTA design total
+Physics report (ir)
+  die 0: peak 45.0001 C, average 45 C
+  max lateral gradient:      0.0141757 C/mm
+  total power:               0.000138409 W
+  leakage power:             1.52514e-05 W
+  worst IR drop:             0.000503701 V
+  WNS nominal / derated:     9.33754e-09 / 9.3248e-09 s
+  TNS nominal / derated:     0 / 0 s
+  electrothermal iterations: 1 (converged)
+  EM lifetime factor:        8.73948
+  thermal clock skew delta:  0 s
+  derating:                  disabled
+  snapshots in history:      1
+  hottest instances:
+    _514_: 45.0001 C, 8.63692e-07 W, 1.09972 V, derate 1.02013
+    _657_: 45.0001 C, 1.36399e-06 W, 1.09972 V, derate 1.02013
+    _741_: 45.0001 C, 2.78769e-07 W, 1.09972 V, derate 1.02013
+    _742_: 45.0001 C, 4.68502e-07 W, 1.09972 V, derate 1.02013
+    _854_: 45.0001 C, 4.57828e-07 W, 1.09972 V, derate 1.02013
+
+PASS: json report written
+[INFO THM-0037] Wrote ir_drop map to analyze_thermal_ir_gcd_ir-tcl.map.
+PASS: ir_drop map has a positive worst drop
+PASS: worst IR drop is positive
+PASS: derated WNS <= nominal WNS
+PASS: EM lifetime factor is finite and positive

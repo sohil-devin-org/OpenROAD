@@ -3,10 +3,12 @@
 
 %{
 #include "ord/OpenRoad.hh"
+#include "thm/PhysicsCoupling.h"
 #include "thm/Thermal.h"
 #include "sta/Scene.hh"
 #include "db_sta/dbSta.hh"
 #include "utl/Logger.h"
+#include <sstream>
 
 static thm::Thermal* getThermal()
 {
@@ -202,6 +204,85 @@ double get_screening_length_um()
 {
   odb::dbBlock* block = getThermal()->db()->getChip()->getBlock();
   return getThermal()->screeningLengthDbu() / block->getDbUnitsPerMicron();
+}
+
+double get_em_lifetime_factor()
+{
+  return getThermal()->lastMetrics().em_lifetime_factor;
+}
+
+double get_derated_tns()
+{
+  return getThermal()->lastMetrics().tns_derated_s;
+}
+
+double get_nominal_tns()
+{
+  return getThermal()->lastMetrics().tns_nominal_s;
+}
+
+// OpenSTA design total power (what report_power prints as Total) for the
+// command corner; used to check the per-instance extraction against it.
+double get_sta_design_power()
+{
+  thm::Thermal* thermal = getThermal();
+  thm::PowerExtractor extractor(thermal->sta(), thermal->logger());
+  return extractor.designTotalPowerW();
+}
+
+////////////////////////////////////////////////////////////////
+// Library characterization.
+
+int characterize_libraries_cmd(const char* corner_names,
+                               const char* leakage_json,
+                               const char* derate_json)
+{
+  Thermal* thermal = getThermal();
+  utl::Logger* logger = thermal->logger();
+  std::vector<std::string> names;
+  std::istringstream name_stream(corner_names);
+  for (std::string name; name_stream >> name;) {
+    names.push_back(name);
+  }
+  const std::vector<LibraryCorner> corners
+      = collectLibraryCorners(thermal->sta(), names, logger);
+  if (corners.empty()) {
+    logger->error(utl::THM, 142,
+                  "No liberty libraries are loaded for the requested corners.");
+  }
+  logger->report("Library corners");
+  logger->report("  {:<32} {:<8} {:>10} {:>8}", "library", "process",
+                 "temp (C)", "VDD (V)");
+  for (const LibraryCorner& corner : corners) {
+    logger->report("  {:<32} {:<8} {:>10g} {:>8g}", corner.library_name,
+                   corner.process, corner.temperature_c, corner.voltage_v);
+  }
+  const int fitted = thermal->characterizeLibraries(corners);
+  const LeakageModel& leakage = thermal->leakageModel();
+  const DerateModel& derate = thermal->derateModel();
+  logger->report("Library characterization");
+  logger->report("  {:<28} {}", "leakage mode:", fitModeName(leakage.mode()));
+  logger->report("  {:<28} {}", "leakage cells fitted:", leakage.numFits());
+  logger->report("  {:<28} {:.6g} /C", "leakage family beta:",
+                 leakage.familyBetaPerC());
+  logger->report("  {:<28} {:g}..{:g} C", "leakage temperature range:",
+                 leakage.temperatureMinC(), leakage.temperatureMaxC());
+  logger->report("  {:<28} {}", "delay temperature mode:",
+                 fitModeName(derate.temperatureMode()));
+  logger->report("  {:<28} {}", "delay voltage mode:",
+                 fitModeName(derate.voltageMode()));
+  logger->report("  {:<28} {}", "delay cells fitted:", derate.numCellFits());
+  logger->report("  {:<28} {:g}..{:g} C", "delay temperature range:",
+                 derate.temperatureMinC(), derate.temperatureMaxC());
+  logger->report("  {:<28} {:g} C / {:g} V", "derate nominal:",
+                 derate.nominalTempC(), derate.nominalVddV());
+  if (leakage_json != nullptr && leakage_json[0] != '\0') {
+    leakage.writeFits(leakage_json);
+  }
+  if (derate_json != nullptr && derate_json[0] != '\0') {
+    derate.writeFits(derate_json);
+  }
+  return fitted;
 }
 
 } // namespace thm
