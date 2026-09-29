@@ -44,6 +44,11 @@ names=$(head -n 1 "$ptrace" | wc -w)
 [ "$blocks" -eq "$names" ] \
   || fail "$blocks floorplan blocks but $names power trace columns"
 
+if [ -n "$FAKE_HOTSPOT_NO_OUTPUT" ]; then
+  echo "fake hotspot: no output requested by FAKE_HOTSPOT_NO_OUTPUT"
+  exit 0
+fi
+
 # Layer 0 peaks in the bottom-left cell (HotSpot row rows-1, column 0).
 # Layer 1 is a cooler, flat layer. Temperatures are in hundredths of Kelvin.
 {

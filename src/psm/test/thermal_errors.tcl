@@ -24,11 +24,24 @@ check_error { psm::thermal_peak }
 check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {4} }
 check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {3 4} }
 check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {0 4} }
+check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {2048 4} }
 
 # Grid file that does not match -grid, or does not exist.
 check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {8 8} }
 check_error { analyze_thermal -grid_file thermal_grid_file.grid -grid {2 2} }
 check_error { analyze_thermal -grid_file does_not_exist.grid -grid {4 4} }
+
+# Nonfinite temperature.
+set bad_grid [make_result_file thermal_errors-nonfinite.grid]
+set out [open $bad_grid w]
+puts $out "Layer 0:\n0\t318.15\n1\tinf\n2\t318.15\n3\t318.15"
+close $out
+# The messages contain paths that depend on the results directory.
+suppress_message PSM 205
+suppress_message PSM 223
+check_error { analyze_thermal -grid_file $bad_grid -grid {2 2} }
+unsuppress_message PSM 205
+unsuppress_message PSM 223
 
 # Missing HotSpot.
 unset -nocomplain ::env(HOTSPOT)
@@ -59,6 +72,14 @@ set ::env(FAKE_HOTSPOT_FAIL) 1
 check_error { analyze_thermal -hotspot $fake -work_dir $work_dir -grid {4 4} }
 unset ::env(FAKE_HOTSPOT_FAIL)
 report_file [file join $work_dir hotspot.log]
+
+# HotSpot exits successfully without writing a grid: an earlier grid in the
+# same work directory must not be reused.
+suppress_message PSM 229
+analyze_thermal -hotspot $fake -work_dir $work_dir -grid {4 4} -max_instances 1
+set ::env(FAKE_HOTSPOT_NO_OUTPUT) 1
+check_error { analyze_thermal -hotspot $fake -work_dir $work_dir -grid {4 4} }
+unset ::env(FAKE_HOTSPOT_NO_OUTPUT)
 
 # Result accessor outside the die.
 analyze_thermal -grid_file thermal_grid_file.grid -grid {4 4} -max_instances 1

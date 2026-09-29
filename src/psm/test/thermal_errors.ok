@@ -11,9 +11,11 @@ caught: PSM-0200
 caught: PSM-0227
 [ERROR PSM-0201] -grid must be a list of rows and columns.
 caught: PSM-0201
-[ERROR PSM-0206] Thermal grid rows and columns must be powers of 2 (3 x 4).
+[ERROR PSM-0206] Thermal grid rows and columns must be powers of 2 no larger than 1024 (3 x 4).
 caught: PSM-0206
-[ERROR PSM-0206] Thermal grid rows and columns must be powers of 2 (0 x 4).
+[ERROR PSM-0206] Thermal grid rows and columns must be powers of 2 no larger than 1024 (0 x 4).
+caught: PSM-0206
+[ERROR PSM-0206] Thermal grid rows and columns must be powers of 2 no larger than 1024 (2048 x 4).
 caught: PSM-0206
 [WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
 [INFO PSM-0205] Reading HotSpot grid temperatures from thermal_grid_file.grid.
@@ -27,6 +29,8 @@ caught: PSM-0223
 [INFO PSM-0205] Reading HotSpot grid temperatures from does_not_exist.grid.
 [ERROR PSM-0222] Unable to open HotSpot grid file does_not_exist.grid.
 caught: PSM-0222
+[WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
+caught: PSM-0223
 [ERROR PSM-0214] HotSpot executable ./does_not_exist/hotspot not found. Use -hotspot, set the HOTSPOT environment variable, or add hotspot to PATH.
 caught: PSM-0214
 [ERROR PSM-0214] HotSpot executable does_not_exist_hotspot not found. Use -hotspot, set the HOTSPOT environment variable, or add hotspot to PATH.
@@ -38,6 +42,27 @@ caught: PSM-0209
 caught: PSM-0220
 fake hotspot -c hotspot.config -f design.flp -p design.ptrace -model_type grid -grid_rows 4 -grid_cols 4 -ambient 318.15 -init_temp 318.15 -steady_file design.steady -grid_steady_file design.grid.steady
 fake hotspot error: failure requested by FAKE_HOTSPOT_FAIL
+[WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
+[INFO PSM-0216] Binned 1.1379e-03 W of instance power into 1.1379e-03 W over 4 x 4 HotSpot tiles.
+########## Thermal report ##########
+Design             : gcd
+Corner             : default
+Grid               : 4 x 4
+Ambient            : 45.00 C
+Total power        : 1.1379e-03 W
+Peak temperature   : 49.50 C
+Average temperature: 47.25 C
+Min temperature    : 45.00 C
+Hottest region     : (0.000, 0.000) - (21.710, 21.710) um
+Region tiles       : 1
+Region average     : 49.50 C
+Region instances   : 5
+Instance                                 Master                            Power (W)
+dpath.a_lt_b$in1\[1\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2349e-05
+####################################
+[WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
+[INFO PSM-0216] Binned 1.1379e-03 W of instance power into 1.1379e-03 W over 4 x 4 HotSpot tiles.
+caught: PSM-0229
 [WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
 [INFO PSM-0205] Reading HotSpot grid temperatures from thermal_grid_file.grid.
 ########## Thermal report ##########

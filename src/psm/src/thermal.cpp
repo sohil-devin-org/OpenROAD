@@ -52,10 +52,11 @@ constexpr int kMaxTilesPerSide = 32;
 constexpr double kMinSpreaderSide = 30e-3;
 constexpr double kMinSinkSide = 60e-3;
 constexpr int kLogTailLines = 20;
+constexpr int kMaxGridSide = 1024;
 
-bool isPowerOfTwo(const int value)
+bool isValidGridSide(const int value)
 {
-  return value > 0 && (value & (value - 1)) == 0;
+  return value > 0 && value <= kMaxGridSide && (value & (value - 1)) == 0;
 }
 
 double dbuToMeters(odb::dbBlock* block, const int64_t dbu)
@@ -275,13 +276,15 @@ bool ThermalAnalyzer::analyze(
 void ThermalAnalyzer::validate(odb::dbBlock* block,
                                const ThermalSettings& settings) const
 {
-  if (!isPowerOfTwo(settings.grid_rows) || !isPowerOfTwo(settings.grid_cols)) {
-    logger_->error(
-        utl::PSM,
-        206,
-        "Thermal grid rows and columns must be powers of 2 ({} x {}).",
-        settings.grid_rows,
-        settings.grid_cols);
+  if (!isValidGridSide(settings.grid_rows)
+      || !isValidGridSide(settings.grid_cols)) {
+    logger_->error(utl::PSM,
+                   206,
+                   "Thermal grid rows and columns must be powers of 2 no "
+                   "larger than {} ({} x {}).",
+                   kMaxGridSide,
+                   settings.grid_rows,
+                   settings.grid_cols);
   }
   const odb::Rect die = block->getDieArea();
   if (die.dx() <= 0 || die.dy() <= 0) {
@@ -450,8 +453,6 @@ void ThermalAnalyzer::writeFloorplan(odb::dbBlock* block,
                    flp_file,
                    ptrace_file);
   }
-  const double tile_w = dbuToMeters(block, die.dx()) / tile_cols;
-  const double tile_h = dbuToMeters(block, die.dy()) / tile_rows;
   flp << "# OpenROAD thermal floorplan of " << block->getName() << ": "
       << tile_rows << " x " << tile_cols << " tiles\n";
   flp << "# <name>\t<width>\t<height>\t<left-x>\t<bottom-y> (meters)\n";
@@ -461,12 +462,13 @@ void ThermalAnalyzer::writeFloorplan(odb::dbBlock* block,
   for (int row = 0; row < tile_rows; row++) {
     for (int col = 0; col < tile_cols; col++) {
       const std::string name = fmt::format("t{}_{}", row, col);
+      const odb::Rect tile = tiles.getTileRect(row, col);
       flp << fmt::format("{}\t{:.9e}\t{:.9e}\t{:.9e}\t{:.9e}\n",
                          name,
-                         tile_w,
-                         tile_h,
-                         col * tile_w,
-                         row * tile_h);
+                         dbuToMeters(block, tile.dx()),
+                         dbuToMeters(block, tile.dy()),
+                         dbuToMeters(block, tile.xMin() - die.xMin()),
+                         dbuToMeters(block, tile.yMin() - die.yMin()));
       const double power = tile_power[(row * tile_cols) + col];
       binned_power += power;
       names += (names.empty() ? "" : "\t") + name;
@@ -637,7 +639,19 @@ std::string ThermalAnalyzer::runHotSpotFlow(odb::dbBlock* block,
                 "Running HotSpot {} in {}.",
                 settings.hotspot_exe,
                 settings.work_dir.empty() ? "a temporary directory" : work_dir);
+  for (const std::string& output : {steady, grid_steady}) {
+    std::error_code ec;
+    std::filesystem::remove(dir / output, ec);
+  }
   runHotSpot(argv, work_dir, log);
+  if (!std::filesystem::is_regular_file(dir / grid_steady)) {
+    logger_->error(utl::PSM,
+                   229,
+                   "HotSpot did not write {}. Last lines of {}:{}",
+                   (dir / grid_steady).string(),
+                   log,
+                   fileTail(log, kLogTailLines));
+  }
   return (dir / grid_steady).string();
 }
 
@@ -677,8 +691,8 @@ ThermalGrid ThermalAnalyzer::readGridFile(const std::string& grid_file,
     std::istringstream values(line);
     int64_t index = -1;
     double temperature_k = 0.0;
-    if (!(values >> index >> temperature_k) || index < 0 || index >= cells
-        || !std::isnan(layers.back()[index])) {
+    if (!(values >> index >> temperature_k) || !std::isfinite(temperature_k)
+        || index < 0 || index >= cells || !std::isnan(layers.back()[index])) {
       logger_->error(utl::PSM,
                      223,
                      "Invalid line {} in HotSpot grid file {} for a {} x {} "
