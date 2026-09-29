@@ -321,10 +321,17 @@ bool HotSpotAdapter::readGridSteady(const std::string& file,
                     file);
       return false;
     }
-    if (!seen[index]) {
-      seen[index] = true;
-      count++;
+    if (seen[index]) {
+      logger_->warn(utl::THM,
+                    39,
+                    "Duplicate grid index {} at line {} of {}.",
+                    index,
+                    line_no,
+                    file);
+      return false;
     }
+    seen[index] = true;
+    count++;
     kelvin[index] = temp;
   }
   if (count != cells) {
