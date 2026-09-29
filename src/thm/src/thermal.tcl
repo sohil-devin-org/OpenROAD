@@ -21,6 +21,8 @@ proc analyze_thermal { args } {
       -grid_rows -grid_cols -ambient -report_instances -report_file} \
     flags {-keep_files}
   sta::check_argc_eq0 "analyze_thermal" $args
+  # Invalid arguments must not leave the previous results behind.
+  thm::clear_thermal_results
 
   set hotspot_binary ""
   if { [info exists keys(-hotspot_binary)] } {

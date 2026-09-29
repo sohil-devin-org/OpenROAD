@@ -287,6 +287,37 @@ class LazyMetadataHeatMap : public web::HeatMapDataSource
   int* populate_calls_;
 };
 
+// A source with a double-typed custom setting, like the thm Temperature
+// map's fixed colour range.
+class DoubleSettingHeatMap : public web::HeatMapDataSource
+{
+ public:
+  explicit DoubleSettingHeatMap(utl::Logger* logger)
+      : web::HeatMapDataSource(logger,
+                               "Double Setting Heat Map",
+                               "DoubleSetting",
+                               "DoubleSetting")
+  {
+    addDoubleSetting(
+        "FixedMin",
+        "Fixed minimum",
+        -100.0,
+        1000.0,
+        0.5,
+        [this]() { return fixed_min_; },
+        [this](double value) { fixed_min_ = value; });
+  }
+
+  double getFixedMin() const { return fixed_min_; }
+
+ protected:
+  bool populateMap() override { return false; }
+  void combineMapData(bool, double&, double, double, double, double) override {}
+
+ private:
+  double fixed_min_ = 25.0;
+};
+
 // Helper to extract payload as string.
 std::string payloadStr(const WebSocketResponse& resp)
 {
@@ -1861,6 +1892,73 @@ TEST_F(TileHandlerTest, HeatMapDoubleSettingAcceptsInteger)
     ASSERT_TRUE(state_.heatmaps.count("Pin"));
     EXPECT_DOUBLE_EQ(state_.heatmaps.at("Pin")->getDisplayRangeMin(), 90.0);
   }
+}
+
+// Custom double settings (MapSettingDouble) are listed with their range and
+// step for the browser's number input and settable through set_heatmap.
+boost::json::object findHeatMapOption(const std::string& heatmaps_json,
+                                      std::string_view option_name)
+{
+  const auto root = parseObj(heatmaps_json);
+  for (const auto& heatmap : root.at("heatmaps").as_array()) {
+    for (const auto& option : heatmap.as_object().at("options").as_array()) {
+      const auto& o = option.as_object();
+      if (o.at("name").as_string() == option_name) {
+        return o;
+      }
+    }
+  }
+  return {};
+}
+
+TEST_F(TileHandlerTest, HeatMapDoubleSettingIsExposedAndSettable)
+{
+  web::registerHeatMapSource(
+      "Double Setting Heat Map", "DoubleSetting", "DoubleSetting", [this]() {
+        return std::make_shared<DoubleSettingHeatMap>(getLogger());
+      });
+  handler_->initializeHeatMaps(state_);
+
+  WebSocketRequest active_req;
+  active_req.type = WebSocketRequest::kSetActiveHeatmap;
+  active_req.json = parseObj(R"({"name":"DoubleSetting"})");
+  EXPECT_EQ(handler_->handleSetActiveHeatMap(active_req, state_).type,
+            WebSocketResponse::kJson);
+
+  WebSocketRequest meta_req;
+  meta_req.id = 30;
+  meta_req.type = WebSocketRequest::kHeatmaps;
+  const std::string before
+      = payloadStr(handler_->handleHeatMaps(meta_req, state_));
+  const auto option = findHeatMapOption(before, "FixedMin");
+  ASSERT_FALSE(option.empty()) << before;
+  EXPECT_EQ(option.at("type").as_string(), "double");
+  EXPECT_EQ(option.at("label").as_string(), "Fixed minimum");
+  EXPECT_DOUBLE_EQ(option.at("min").to_number<double>(), -100.0);
+  EXPECT_DOUBLE_EQ(option.at("max").to_number<double>(), 1000.0);
+  EXPECT_DOUBLE_EQ(option.at("step").to_number<double>(), 0.5);
+  EXPECT_DOUBLE_EQ(option.at("value").to_number<double>(), 25.0);
+
+  WebSocketRequest set_req;
+  set_req.id = 31;
+  set_req.type = WebSocketRequest::kSetHeatmap;
+  set_req.json = parseObj(
+      R"({"name":"DoubleSetting","option":"FixedMin","value":45.5})");
+  auto set_resp = handler_->handleSetHeatMap(set_req, state_);
+  EXPECT_EQ(set_resp.type, WebSocketResponse::kJson) << payloadStr(set_resp);
+  {
+    std::lock_guard<std::mutex> lock(state_.heatmap_mutex);
+    ASSERT_TRUE(state_.heatmaps.count("DoubleSetting"));
+    const auto* source = dynamic_cast<const DoubleSettingHeatMap*>(
+        state_.heatmaps.at("DoubleSetting").get());
+    ASSERT_NE(source, nullptr);
+    EXPECT_DOUBLE_EQ(source->getFixedMin(), 45.5);
+  }
+  const std::string after
+      = payloadStr(handler_->handleHeatMaps(meta_req, state_));
+  EXPECT_DOUBLE_EQ(
+      findHeatMapOption(after, "FixedMin").at("value").to_number<double>(),
+      45.5);
 }
 
 TEST_F(TileHandlerTest, HeatMapsMetadataIsLazyForInactiveSources)

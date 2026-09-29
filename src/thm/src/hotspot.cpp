@@ -72,9 +72,6 @@ constexpr const char* kDefaultConfig
 -use_microfluidic_cooling 0
 )";
 
-// HotSpot's flp.h MAX_UNITS.
-constexpr size_t kMaxHotSpotUnits = 8192;
-
 std::string shellQuote(const std::string& arg)
 {
   std::string quoted = "'";
@@ -144,13 +141,13 @@ void HotSpotAdapter::writeFloorplan(const std::string& file,
                                     const std::vector<PowerTile>& tiles,
                                     const odb::Rect& bounds) const
 {
-  if (tiles.size() > kMaxHotSpotUnits) {
+  if (static_cast<int64_t>(tiles.size()) > kMaxUnits) {
     logger_->warn(utl::THM,
                   30,
                   "{} floorplan tiles exceed HotSpot's limit of {} units; "
                   "increase -tile_size.",
                   tiles.size(),
-                  kMaxHotSpotUnits);
+                  kMaxUnits);
   }
   std::ofstream stream(file);
   if (!stream) {

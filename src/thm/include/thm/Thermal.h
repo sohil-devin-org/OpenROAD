@@ -79,9 +79,16 @@ struct ThermalStats
   int peak_col = -1;
   // Cell of the peak temperature.
   odb::Rect hottest_region;
-  // Instances overlapping hottest_region sorted by decreasing power.
-  std::vector<odb::dbInst*> hottest_insts;
-  // Total power fed to HotSpot in watts.
+  // Instances overlapping hottest_region sorted by decreasing power. Names
+  // are copied so the report stays valid if the design changes afterwards.
+  struct Instance
+  {
+    std::string name;
+    std::string master;
+    double power_w = 0.0;
+  };
+  std::vector<Instance> hottest_insts;
+  // Total power fed to HotSpot in watts (instance power clipped to the die).
   double total_power_w = 0.0;
 };
 
@@ -114,17 +121,22 @@ class ThermalAnalyzer
   // Per placed instance total power in watts for the corner.
   odb::PtrMap<odb::dbInst, double> getInstancePower(sta::Scene* corner) const;
 
+  // Number of tile {rows, cols} buildTiles creates for bounds and tile_size.
+  static std::pair<int, int> tileCounts(const odb::Rect& bounds, int tile_size);
+
   // Bins instance power into square tiles of tile_size (dbu) covering
-  // bounds; tiles on the far edges are shrunk to fit.
+  // bounds; the tile count is rounded so the tiles cover bounds exactly.
   static std::vector<PowerTile> buildTiles(
       const odb::Rect& bounds,
       int tile_size,
       const odb::PtrMap<odb::dbInst, double>& inst_power);
 
-  // Computes peak/average/min and the hottest region and its instances.
-  ThermalStats computeStats(const TemperatureGrid& grid,
-                            const odb::PtrMap<odb::dbInst, double>& inst_power,
-                            int max_instances) const;
+  // Computes peak/average/min, the total power inside the die and the
+  // hottest region and its instances.
+  static ThermalStats computeStats(
+      const TemperatureGrid& grid,
+      const odb::PtrMap<odb::dbInst, double>& inst_power,
+      int max_instances);
 
   // Logs the report; also writes it to `file` when non-empty.
   void report(const std::string& file = "") const;
@@ -148,7 +160,6 @@ class ThermalAnalyzer
 
   TemperatureGrid grid_;
   ThermalStats stats_;
-  odb::PtrMap<odb::dbInst, double> last_inst_power_;
   sta::Scene* last_corner_ = nullptr;
 
   std::shared_ptr<web::HeatMapSourceRegistration> heatmap_source_;

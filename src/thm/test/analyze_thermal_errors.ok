@@ -21,3 +21,74 @@ has results: 0
 fatal: simulated HotSpot failure
 [ERROR THM-0020] HotSpot config file /no/such/hotspot.config does not exist.
 THM-0020
+[INFO THM-0010] Thermal analysis: 1278 instances, 1024 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 4x4.
+Thermal analysis report
+-----------------------
+Grid:                4 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0008076 W
+Peak temperature:    46.30 C
+Average temperature: 45.14 C
+Min temperature:     45.00 C
+Hottest region:      (149.98, 150.06) - (224.97, 225.10) um [row 2, col 2]
+Instances in hottest region (2 shown):
+  _424_                                    sky130_fd_sc_hd__dfxtp_1       1.468e-05 W
+  _427_                                    sky130_fd_sc_hd__dfxtp_1       1.425e-05 W
+
+has results: 1
+[ERROR THM-0004] HotSpot executable "/no/such/dir/hotspot" not found; use -hotspot_binary or add it to PATH.
+THM-0004
+has results after failed rerun: 0
+[INFO THM-0010] Thermal analysis: 1278 instances, 1024 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 4x4.
+Thermal analysis report
+-----------------------
+Grid:                4 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0008076 W
+Peak temperature:    46.30 C
+Average temperature: 45.14 C
+Min temperature:     45.00 C
+Hottest region:      (149.98, 150.06) - (224.97, 225.10) um [row 2, col 2]
+Instances in hottest region (2 shown):
+  _424_                                    sky130_fd_sc_hd__dfxtp_1       1.468e-05 W
+  _427_                                    sky130_fd_sc_hd__dfxtp_1       1.425e-05 W
+
+[ERROR STA-0572] -tile_size '-5' is not a positive float.
+STA-0572
+has results after invalid argument: 0
+[INFO THM-0010] Thermal analysis: 1278 instances, 1024 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 4x4.
+Thermal analysis report
+-----------------------
+Grid:                4 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0008076 W
+Peak temperature:    46.30 C
+Average temperature: 45.14 C
+Min temperature:     45.00 C
+Hottest region:      (149.98, 150.06) - (224.97, 225.10) um [row 2, col 2]
+Instances in hottest region (1 shown):
+  _424_                                    sky130_fd_sc_hd__dfxtp_1       1.468e-05 W
+
+deleted _424_: 1
+Thermal analysis report
+-----------------------
+Grid:                4 x 4 cells over die 299.96 x 300.13 um
+Total power:         0.0008076 W
+Peak temperature:    46.30 C
+Average temperature: 45.14 C
+Min temperature:     45.00 C
+Hottest region:      (149.98, 150.06) - (224.97, 225.10) um [row 2, col 2]
+Instances in hottest region (1 shown):
+  _424_                                    sky130_fd_sc_hd__dfxtp_1       1.468e-05 W
+
+[ERROR THM-0018] -tile_size 0.0001 um is smaller than a database unit (0.001 um).
+THM-0018
+[ERROR THM-0019] 300 x 300 tiles of 1.00 um exceed HotSpot's limit of 8192 floorplan units; increase -tile_size to at least 3.32 um.
+THM-0019
+[INFO THM-0010] Thermal analysis: 1277 instances, 1024 tiles of 9.38 um, total power 0.0007734 W, HotSpot grid 4x4.
+[WARNING THM-0038] results/analyze_thermal_errors_grid/gcd.grid.steady has 8 silicon layer entries; expected 16 for a 4x4 grid.
+[ERROR THM-0006] HotSpot thermal analysis failed.
+THM-0006
+has results: 0
+[INFO THM-0010] Thermal analysis: 1277 instances, 1024 tiles of 9.38 um, total power 0.0007734 W, HotSpot grid 4x4.
+[WARNING THM-0037] Unexpected entry "nan	not-a-temperature" at line 5 of results/analyze_thermal_errors_grid/gcd.grid.steady.
+[ERROR THM-0006] HotSpot thermal analysis failed.
+THM-0006
+has results: 0

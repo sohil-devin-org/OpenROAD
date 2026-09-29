@@ -141,7 +141,8 @@ Simply run the following script:
   `-r_convec`).
 - HotSpot accepts at most 8192 floorplan units, so the number of power tiles
   (`round(die_width / tile_size) * round(die_height / tile_size)`) must stay
-  below that; increase `-tile_size` for large dies.
+  below that; `analyze_thermal` rejects a `-tile_size` that needs more tiles
+  and suggests the smallest one that fits.
 - HotSpot reports grid temperatures with two decimals, so designs with
   less than a milliwatt (e.g. `gcd`) show only a few hundredths of a degree
   of spatial variation; the heat map legend switches to two decimals when

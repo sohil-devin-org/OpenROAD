@@ -90,7 +90,6 @@ void ThermalAnalyzer::clearResults()
 {
   grid_ = TemperatureGrid();
   stats_ = ThermalStats();
-  last_inst_power_.clear();
   last_corner_ = nullptr;
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
@@ -125,21 +124,31 @@ odb::PtrMap<odb::dbInst, double> ThermalAnalyzer::getInstancePower(
   return powers;
 }
 
+std::pair<int, int> ThermalAnalyzer::tileCounts(const odb::Rect& bounds,
+                                                int tile_size)
+{
+  if (tile_size <= 0 || bounds.dx() <= 0 || bounds.dy() <= 0) {
+    return {0, 0};
+  }
+  // Round the tile count so the tiles cover the die exactly (no sliver
+  // tiles at the far edges); tile edges are then die_size * i / count.
+  const int rows = std::max(
+      1, static_cast<int>(std::lround(bounds.dy() / double(tile_size))));
+  const int cols = std::max(
+      1, static_cast<int>(std::lround(bounds.dx() / double(tile_size))));
+  return {rows, cols};
+}
+
 std::vector<PowerTile> ThermalAnalyzer::buildTiles(
     const odb::Rect& bounds,
     int tile_size,
     const odb::PtrMap<odb::dbInst, double>& inst_power)
 {
   std::vector<PowerTile> tiles;
-  if (tile_size <= 0 || bounds.dx() <= 0 || bounds.dy() <= 0) {
+  const auto [rows, cols] = tileCounts(bounds, tile_size);
+  if (rows == 0 || cols == 0) {
     return tiles;
   }
-  // Round the tile count so the tiles cover the die exactly (no sliver
-  // tiles at the far edges); tile edges are then die_size * i / count.
-  const int cols = std::max(
-      1, static_cast<int>(std::lround(bounds.dx() / double(tile_size))));
-  const int rows = std::max(
-      1, static_cast<int>(std::lround(bounds.dy() / double(tile_size))));
   const auto x_edge = [&](int col) {
     return bounds.xMin()
            + static_cast<int>(static_cast<int64_t>(bounds.dx()) * col / cols);
@@ -203,7 +212,7 @@ std::vector<PowerTile> ThermalAnalyzer::buildTiles(
 ThermalStats ThermalAnalyzer::computeStats(
     const TemperatureGrid& grid,
     const odb::PtrMap<odb::dbInst, double>& inst_power,
-    int max_instances) const
+    int max_instances)
 {
   ThermalStats stats;
   if (grid.empty()) {
@@ -227,31 +236,37 @@ ThermalStats ThermalAnalyzer::computeStats(
   stats.average_c = sum / grid.temps_c.size();
   stats.hottest_region = grid.cellRect(stats.peak_row, stats.peak_col);
 
-  std::vector<std::pair<double, odb::dbInst*>> insts;
+  // Same clipping as buildTiles, so the total matches the HotSpot trace.
+  std::vector<ThermalStats::Instance> insts;
   for (const auto& [inst, power] : inst_power) {
-    stats.total_power_w += power;
-    if (inst->getBBox()->getBox().intersects(stats.hottest_region)) {
-      insts.emplace_back(power, inst);
+    const odb::Rect bbox = inst->getBBox()->getBox();
+    const double area = static_cast<double>(bbox.area());
+    if (area > 0 && bbox.overlaps(grid.bounds)) {
+      const double inside
+          = static_cast<double>(bbox.intersect(grid.bounds).area());
+      stats.total_power_w += power * inside / area;
+    }
+    if (bbox.intersects(stats.hottest_region)) {
+      insts.push_back({inst->getName(), inst->getMaster()->getName(), power});
     }
   }
   std::sort(insts.begin(), insts.end(), [](const auto& a, const auto& b) {
-    if (a.first != b.first) {
-      return a.first > b.first;
+    if (a.power_w != b.power_w) {
+      return a.power_w > b.power_w;
     }
-    return a.second->getName() < b.second->getName();
+    return a.name < b.name;
   });
-  for (const auto& [power, inst] : insts) {
-    if (max_instances >= 0
-        && static_cast<int>(stats.hottest_insts.size()) >= max_instances) {
-      break;
-    }
-    stats.hottest_insts.push_back(inst);
+  if (max_instances >= 0 && static_cast<int>(insts.size()) > max_instances) {
+    insts.resize(max_instances);
   }
+  stats.hottest_insts = std::move(insts);
   return stats;
 }
 
 bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
 {
+  // A failed analysis must not leave the previous results behind.
+  clearResults();
   odb::dbBlock* block = getBlock();
   if (block == nullptr) {
     logger_->error(utl::THM, 1, "No design loaded.");
@@ -265,7 +280,6 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
     logger_->error(utl::THM, 3, "Grid rows and columns must be positive.");
   }
 
-  clearResults();
   const int dbu = block->getDbUnitsPerMicron();
 
   HotSpotAdapter hotspot(logger_, dbu);
@@ -284,8 +298,31 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
   }
 
   int tile_size = static_cast<int>(std::lround(options.tile_size_um * dbu));
+  if (options.tile_size_um > 0 && tile_size < 1) {
+    logger_->error(utl::THM,
+                   18,
+                   "-tile_size {} um is smaller than a database unit ({} um).",
+                   options.tile_size_um,
+                   1.0 / dbu);
+  }
   if (tile_size <= 0) {
     tile_size = std::max(1, std::max(bounds.dx(), bounds.dy()) / 32);
+  }
+  const auto [tile_rows, tile_cols] = tileCounts(bounds, tile_size);
+  const int64_t tile_count = static_cast<int64_t>(tile_rows) * tile_cols;
+  if (tile_count > HotSpotAdapter::kMaxUnits) {
+    logger_->error(
+        utl::THM,
+        19,
+        "{} x {} tiles of {:.2f} um exceed HotSpot's limit of {} "
+        "floorplan units; increase -tile_size to at least {:.2f} um.",
+        tile_cols,
+        tile_rows,
+        tile_size / double(dbu),
+        HotSpotAdapter::kMaxUnits,
+        std::sqrt(static_cast<double>(bounds.dx()) * bounds.dy()
+                  / HotSpotAdapter::kMaxUnits)
+            / dbu);
   }
   std::vector<PowerTile> tiles = buildTiles(bounds, tile_size, inst_power);
   double total_power = 0.0;
@@ -362,9 +399,8 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
   }
 
   grid_ = std::move(grid);
-  last_inst_power_ = std::move(inst_power);
   last_corner_ = corner;
-  stats_ = computeStats(grid_, last_inst_power_, options.report_instances);
+  stats_ = computeStats(grid_, inst_power, options.report_instances);
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
   }
@@ -407,13 +443,9 @@ void ThermalAnalyzer::report(const std::string& file) const
       stats_.peak_col);
   out << fmt::format("Instances in hottest region ({} shown):\n",
                      stats_.hottest_insts.size());
-  for (odb::dbInst* inst : stats_.hottest_insts) {
-    const auto it = last_inst_power_.find(inst);
-    const double power = it == last_inst_power_.end() ? 0.0 : it->second;
-    out << fmt::format("  {:<40} {:<30} {:.4g} W\n",
-                       inst->getName(),
-                       inst->getMaster()->getName(),
-                       power);
+  for (const ThermalStats::Instance& inst : stats_.hottest_insts) {
+    out << fmt::format(
+        "  {:<40} {:<30} {:.4g} W\n", inst.name, inst.master, inst.power_w);
   }
 
   logger_->report("{}", out.str());
@@ -493,8 +525,7 @@ bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
   clearResults();
   grid_ = std::move(grid);
   last_corner_ = sta_->cmdScene();
-  last_inst_power_ = getInstancePower(last_corner_);
-  stats_ = computeStats(grid_, last_inst_power_, 10);
+  stats_ = computeStats(grid_, getInstancePower(last_corner_), 10);
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
   }

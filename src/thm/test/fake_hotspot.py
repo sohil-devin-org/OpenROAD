@@ -8,6 +8,8 @@
 # a grid steady file (HotSpot layout: "Layer <n>:" sections with rows*cols
 # "<index>\t<kelvin>" lines indexed row-major from the top-left corner) whose
 # temperature is ambient + K_PER_WATT * power of the tile covering each cell.
+# FAKE_HOTSPOT_GRID=truncated|garbage in the environment makes it write a
+# broken silicon layer to exercise the reader's error handling.
 
 import os
 import sys
@@ -130,9 +132,14 @@ def main():
     with open(args["grid_steady_file"], "w") as f:
         # Layer 0 is silicon; the extra layers mimic HotSpot's package layers
         # and must be ignored by the reader.
+        broken = os.environ.get("FAKE_HOTSPOT_GRID", "")
         for layer in range(2):
             f.write("Layer {}:\n".format(layer))
             for index, temp in enumerate(grid):
+                if layer == 0 and broken == "truncated" and index >= len(grid) // 2:
+                    break
+                if layer == 0 and broken == "garbage" and index == 3:
+                    f.write("nan\tnot-a-temperature\n")
                 f.write("{}\t{:.2f}\n".format(index, temp if layer == 0 else
                                               ambient))
     if "steady_file" in args:

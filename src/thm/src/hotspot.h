@@ -70,6 +70,8 @@ class HotSpotAdapter
                       TemperatureGrid& grid) const;
 
   static constexpr double kKelvinOffset = 273.15;
+  // HotSpot's flp.h MAX_UNITS: the most floorplan units it accepts.
+  static constexpr int64_t kMaxUnits = 8192;
 
  private:
   utl::Logger* logger_;
