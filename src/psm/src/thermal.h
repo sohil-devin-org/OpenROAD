@@ -64,6 +64,10 @@ class ThermalGrid
   int getCols() const { return cols_; }
   double getTemperature(int row, int col) const;
   odb::Rect getTileRect(int row, int col) const;
+  // (row, col) of the tile containing pt; nullopt if pt is outside bounds.
+  std::optional<std::pair<int, int>> findTile(const odb::Point& pt) const;
+  // Temperature of the tile containing pt; nullopt if pt is outside bounds.
+  std::optional<double> getTemperatureAt(const odb::Point& pt) const;
   const std::vector<double>& getTemperatures() const { return temperatures_c_; }
 
   double getMin() const;
@@ -77,8 +81,12 @@ class ThermalGrid
   std::vector<double> temperatures_c_;
 };
 
+// Connected (4-neighbor) set of tiles containing the peak tile whose
+// temperature is at least peak - kHotRegionFraction * (peak - min).
 struct ThermalHotRegion
 {
+  static constexpr double kHotRegionFraction = 0.1;
+
   odb::Rect bounds;
   std::vector<std::pair<int, int>> tiles;  // (row, col)
   double peak_c = 0.0;
@@ -100,6 +108,8 @@ class ThermalAnalyzer
                    user_powers);
 
   const ThermalGrid& getGrid() const { return grid_; }
+  // Total instance power (W) of the last successful run.
+  double getTotalPower() const { return total_power_; }
   const std::optional<ThermalHotRegion>& getHotRegion() const
   {
     return hot_region_;
@@ -117,9 +127,43 @@ class ThermalAnalyzer
   }
 
  private:
+  using InstancePowers = std::vector<std::pair<odb::dbInst*, float>>;
+
+  void validate(odb::dbBlock* block, const ThermalSettings& settings) const;
+  InstancePowers collectInstancePower(
+      odb::dbBlock* block,
+      sta::Scene* corner,
+      const odb::PtrMap<odb::dbInst, std::map<sta::Scene*, float>>& user_powers)
+      const;
+  std::string findHotSpot(const ThermalSettings& settings) const;
+  void writeFloorplan(odb::dbBlock* block,
+                      const InstancePowers& powers,
+                      int tile_rows,
+                      int tile_cols,
+                      const std::string& flp_file,
+                      const std::string& ptrace_file) const;
+  void writeConfig(odb::dbBlock* block, const std::string& config_file) const;
+  void runHotSpot(const std::vector<std::string>& argv,
+                  const std::string& work_dir,
+                  const std::string& log_file) const;
+  std::string runHotSpotFlow(odb::dbBlock* block,
+                             const ThermalSettings& settings,
+                             const InstancePowers& powers,
+                             const std::string& work_dir) const;
+  ThermalGrid readGridFile(const std::string& grid_file,
+                           const odb::Rect& bounds,
+                           int rows,
+                           int cols) const;
+  ThermalHotRegion findHotRegion(const InstancePowers& powers) const;
+  void report(odb::dbBlock* block,
+              const ThermalSettings& settings,
+              sta::Scene* corner) const;
+  void writeReportFile(const std::string& report_file) const;
+
   utl::Logger* logger_;
   sta::dbSta* sta_;
   ThermalGrid grid_;
+  double total_power_ = 0.0;
   std::optional<ThermalHotRegion> hot_region_;
   std::optional<std::pair<double, double>> color_range_;
 };
