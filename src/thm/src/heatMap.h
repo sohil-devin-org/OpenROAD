@@ -43,6 +43,9 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
   double getScaleMax() const { return scale_max_c_; }
   bool isFixedScale() const { return fixed_scale_; }
 
+  // Absolute degrees Celsius, never SI-prefixed.
+  std::string formatValue(double value, bool legend) const override;
+
  protected:
   bool populateMap() override;
   void combineMapData(bool base_has_value,
@@ -52,6 +55,8 @@ class TemperatureDataSource : public web::RealValueHeatMapDataSource
                       double intersection_area,
                       double rect_area) override;
   void determineMinMax(const web::HeatMapDataSource::Map& map) override;
+  // Keeps min/max in absolute degrees (no SI rescaling of the range).
+  void correctMapScale(web::HeatMapDataSource::Map& map) override;
 
  private:
   std::vector<std::string> dieChoices() const;

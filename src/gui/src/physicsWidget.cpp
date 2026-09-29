@@ -448,7 +448,9 @@ void PhysicsWidget::rebuildChart(const thm::PhysicsHistory& history)
   if (history.empty()) {
     return;
   }
-  x_axis_->setRange(0, std::max(1, history.size() - 1));
+  const int last = std::max(1, history.size() - 1);
+  x_axis_->setRange(0, last);
+  x_axis_->setTickInterval(std::max(1, (last + 9) / 10));
   const double peak_pad = std::max(0.5, (peak_max - peak_min) * 0.1);
   peak_axis_->setRange(peak_min - peak_pad, peak_max + peak_pad);
   const double wns_pad = std::max(0.01, (wns_max - wns_min) * 0.1);

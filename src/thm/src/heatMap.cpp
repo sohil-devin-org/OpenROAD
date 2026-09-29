@@ -184,6 +184,31 @@ void TemperatureDataSource::determineMinMax(
   web::RealValueHeatMapDataSource::determineMinMax(map);
 }
 
+void TemperatureDataSource::correctMapScale(web::HeatMapDataSource::Map& map)
+{
+  determineMinMax(map);
+  for (const auto& map_col : map) {
+    for (const auto& map_pt : map_col) {
+      map_pt->value = convertValueToPercent(map_pt->value);
+    }
+  }
+}
+
+std::string TemperatureDataSource::formatValue(double value, bool legend) const
+{
+  const double temp_c = convertPercentToValue(value);
+  const double range
+      = convertPercentToValue(100.0) - convertPercentToValue(0.0);
+  const int digits = range >= 5.0 ? 1 : (range >= 0.5 ? 2 : 3);
+  char text[64];
+  std::snprintf(text, sizeof(text), "%.*f", digits, temp_c);
+  std::string result(text);
+  if (legend) {
+    result += " C";
+  }
+  return result;
+}
+
 void TemperatureDataSource::combineMapData(bool base_has_value,
                                            double& base,
                                            const double new_data,
