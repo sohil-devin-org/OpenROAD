@@ -19,6 +19,7 @@
 
 #include "AbstractGraphics.h"
 #include "clockBase.h"
+#include "gpl/PhysicsModel.h"
 #include "nesterovBase.h"
 #include "odb/db.h"
 #include "placerBase.h"
@@ -1153,6 +1154,10 @@ int NesterovPlace::doNesterovPlace(int start_iter)
     // coeff is (a_k - 1) / ( a_(k+1) ) in paper.
     const float coeff = (prevA - 1.0) / curA;
 
+    if (physics_ != nullptr) {
+      runPhysics(nesterov_iter);
+    }
+
     doBackTracking(coeff);
 
     // Adjust Phi dynamically for larger designs
@@ -1234,6 +1239,10 @@ int NesterovPlace::doNesterovPlace(int start_iter)
 
   // In all case, including divergence, the db should be updated.
   updateDb();
+
+  if (physics_ != nullptr) {
+    finishPhysics(nesterov_iter);
+  }
 
   if (num_region_diverged_ > 0) {
     log_->error(GPL, divergeCode_, divergeMsg_);
@@ -1489,6 +1498,102 @@ void nesterovDbCbk::inDbNetCreate(odb::dbNet* db_net)
 void nesterovDbCbk::inDbNetDestroy(odb::dbNet* db_net)
 {
   nesterov_place_->destroyCbkGNet(db_net);
+}
+
+}  // namespace gpl
+
+namespace gpl {
+
+void NesterovPlace::runPhysics(const int iter)
+{
+  if (!nbc_->hasPhysics()) {
+    return;
+  }
+  const bool checkpoint_due
+      = iter == 0 || iter % npVars_.physicsCheckpointInterval == 0;
+  if (checkpoint_due) {
+    runPhysicsCheckpoint(iter, fmt::format("gpl_iter_{}", iter));
+  }
+  if (iter % npVars_.physicsFieldInterval == 0 || checkpoint_due) {
+    nbc_->updatePhysicsField();
+  }
+  const bool active
+      = iter > 0 && average_overflow_unscaled_ <= npVars_.physicsStartOverflow;
+  if (active && !physics_force_active_) {
+    log_->info(GPL,
+               197,
+               "Physics force enabled at iteration {} (overflow {:.3f}, "
+               "weight {:.2f}).",
+               iter,
+               average_overflow_unscaled_,
+               npVars_.physicsWeight);
+  }
+  physics_force_active_ = active;
+  for (auto& nb : nbVec_) {
+    nb->setPhysicsActive(active);
+  }
+}
+
+void NesterovPlace::runPhysicsCheckpoint(const int iter,
+                                         const std::string& label)
+{
+  updateDb();
+  auto block = pbc_->db()->getChip()->getBlock();
+  const double hpwl_um = block->dbuToMicrons(nbc_->getHpwl());
+  if (physics_checkpoint_count_ == 0) {
+    physics_->beginPlacement();
+  }
+  const PhysicsCheckpointResult result = physics_->runCheckpoint(
+      label, iter, hpwl_um, average_overflow_unscaled_, npVars_.physicsWeight);
+  ++physics_checkpoint_count_;
+  if (result.valid) {
+    if (physics_checkpoint_count_ == 1) {
+      physics_first_peak_c_ = result.peak_temp_c;
+      physics_first_wns_s_ = result.wns_derated_s;
+    }
+    physics_last_peak_c_ = result.peak_temp_c;
+    physics_last_wns_s_ = result.wns_derated_s;
+    log_->info(GPL,
+               198,
+               "Physics checkpoint {} (iter {}): peak {:.2f} C, avg {:.2f} C, "
+               "power {:.4f} W, leakage {:.4f} W, IR drop {:.4f} V, "
+               "WNS nominal {:.3e} s, derated {:.3e} s{}.",
+               physics_checkpoint_count_,
+               iter,
+               result.peak_temp_c,
+               result.avg_temp_c,
+               result.total_power_w,
+               result.leakage_power_w,
+               result.worst_ir_drop_v,
+               result.wns_nominal_s,
+               result.wns_derated_s,
+               result.runaway ? " (THERMAL RUNAWAY)" : "");
+  }
+  // Leakage moved with temperature: refresh the per-cell power.
+  nbc_->updatePhysicsPower();
+}
+
+void NesterovPlace::finishPhysics(const int iter)
+{
+  if (!nbc_->hasPhysics()) {
+    return;
+  }
+  runPhysicsCheckpoint(iter, "gpl_final");
+  physics_->endPlacement();
+  for (auto& nb : nbVec_) {
+    nb->setPhysicsActive(false);
+  }
+  log_->info(GPL,
+             199,
+             "Physics-driven placement: {} checkpoints, peak temperature "
+             "{:.2f} -> {:.2f} C, derated WNS {:.3e} -> {:.3e} s.",
+             physics_checkpoint_count_,
+             physics_first_peak_c_,
+             physics_last_peak_c_,
+             physics_first_wns_s_,
+             physics_last_wns_s_);
+  log_->metric("gpl__physics__peak_temperature_c", physics_last_peak_c_);
+  log_->metric("gpl__physics__wns_derated", physics_last_wns_s_);
 }
 
 }  // namespace gpl

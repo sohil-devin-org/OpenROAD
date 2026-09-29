@@ -9,6 +9,12 @@ sta::define_cmd_args "global_placement" {\
     [-timing_driven_repair_timing]\
     [-routability_driven]\
     [-virtual_cts]\
+    [-physics_driven]\
+    [-physics_weight physics_weight]\
+    [-physics_checkpoint_interval physics_checkpoint_interval]\
+    [-physics_field_interval physics_field_interval]\
+    [-physics_start_overflow physics_start_overflow]\
+    [-physics_grid physics_grid]\
     [-incremental]\
     [-skip_io]\
     [-place_ios]\
@@ -72,6 +78,11 @@ proc global_placement { args } {
       -timing_driven_repair_tns_end_percent \
       -keep_resize_below_overflow \
       -virtual_cts_max_skew_fraction \
+      -physics_weight \
+      -physics_checkpoint_interval \
+      -physics_field_interval \
+      -physics_start_overflow \
+      -physics_grid \
       -random_seed \
       -perturb_dist \
       -pad_left -pad_right} \
@@ -82,6 +93,7 @@ proc global_placement { args } {
       -timing_driven_repair_timing \
       -routability_driven \
       -virtual_cts \
+      -physics_driven \
       -routability_use_grt \
       -skip_io \
       -place_ios \
@@ -107,6 +119,36 @@ proc global_placement { args } {
     }
     if { [info exists flags(-routability_driven)] } {
       utl::error GPL 181 "-place_ios cannot be used with -routability_driven placement."
+    }
+    if { [info exists flags(-physics_driven)] } {
+      utl::error GPL 189 "-place_ios cannot be used with -physics_driven placement."
+    }
+  }
+
+  if { [info exists flags(-physics_driven)] } {
+    if { [info exists keys(-physics_start_overflow)] } {
+      sta::check_positive_float -physics_start_overflow $keys(-physics_start_overflow)
+    }
+    if { [info exists keys(-physics_weight)] } {
+      sta::check_positive_float -physics_weight $keys(-physics_weight)
+      if { $keys(-physics_weight) <= 0.0 } {
+        utl::error GPL 200 "-physics_weight '$keys(-physics_weight)' must be greater than 0."
+      }
+    }
+    foreach key {-physics_checkpoint_interval -physics_field_interval -physics_grid} {
+      if { [info exists keys($key)] } {
+        sta::check_positive_integer $key $keys($key)
+        if { $keys($key) <= 0 } {
+          utl::error GPL 201 "$key '$keys($key)' must be greater than 0."
+        }
+      }
+    }
+  } else {
+    foreach key {-physics_weight -physics_checkpoint_interval -physics_field_interval \
+      -physics_start_overflow -physics_grid} {
+      if { [info exists keys($key)] } {
+        utl::error GPL 188 "$key requires -physics_driven."
+      }
     }
   }
 
