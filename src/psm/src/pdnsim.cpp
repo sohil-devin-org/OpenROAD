@@ -164,6 +164,9 @@ bool PDNSim::analyzeThermal(const ThermalSettings& settings)
   if (block == nullptr) {
     logger_->error(utl::PSM, 200, "No design loaded.");
   }
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
   const bool ok = thermal_->analyze(block, settings, user_powers_);
   if (thermal_heatmap_source_) {
     thermal_heatmap_source_->invalidateInstances();
