@@ -621,6 +621,11 @@ python3 etc/find_messages.py -d src/thm > src/thm/messages.txt
 - IR drop requires a routed power grid (`pdngen`) and voltage sources
   (`-vsrc` or PDNSim's own); the grid resistance is not corrected for
   temperature (no public PDNSim hook).
+- During `global_placement -physics_driven` the cells are not legalized, so
+  PDNSim usually cannot connect them to the rails: the IR-drop analysis is
+  attempted once per placement run, warned about once (THM-0197) and the
+  nominal supply is used for the remaining checkpoints.  Run
+  `analyze_thermal` after `detailed_placement` for IR-aware derates.
 - Instance derates are applied to the SDC of the analysis corner; changing
   `set_timing_derate` while physics derating is enabled requires
   `set_physics_derating -disable` / `-enable` to pick the new factors up.

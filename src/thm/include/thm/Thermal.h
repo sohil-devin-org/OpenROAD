@@ -146,6 +146,8 @@ class Thermal
   // returns the final metrics.
   PhysicsMetrics analyze(const AnalyzeOptions& options);
   bool hasResults() const { return has_results_; }
+  // Allow the IR-drop analysis to be retried after a failure.
+  void resetIrDrop();
   void reset();
 
   // ---- results -----------------------------------------------------------

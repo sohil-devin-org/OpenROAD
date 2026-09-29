@@ -580,6 +580,11 @@ void Thermal::runTiming(PhysicsMetrics& metrics)
   }
 }
 
+void Thermal::resetIrDrop()
+{
+  ir_coupling_->reset();
+}
+
 PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
 {
   const auto start = std::chrono::steady_clock::now();
