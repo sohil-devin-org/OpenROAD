@@ -1835,6 +1835,16 @@ export function populateDisplayControls(app, visibility, selectability,
                                   value,
                               });
                           });
+            } else if (option.type === 'double') {
+                addNumber(settings, option.label, option.value, option.step,
+                          value => {
+                              sendHeatMapUpdate({
+                                  type: 'set_heatmap',
+                                  name: active.name,
+                                  option: option.name,
+                                  value,
+                              });
+                          });
             }
         }
 

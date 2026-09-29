@@ -87,15 +87,20 @@ write_temperature_map file
 
 After `analyze_thermal` the `Temperature` heat map is available in the GUI
 (`Heat Maps` > `Temperature`) and through the `gui::set_heatmap Temperature`
-settings. Values are absolute degrees Celsius. Enable `FixedRange` together
-with `FixedMin`/`FixedMax` to pin the color range so different designs can be
-compared fairly:
+settings; it is empty until thermal results exist. Each map cell is one
+HotSpot grid cell over the die area and values are absolute degrees Celsius
+(legend, tooltips and `gui::dump_heatmap` all report `°C`, no SI prefixes).
+By default the colour scale spans the real min/max of the grid. Enable
+`FixedRange` together with `FixedMin`/`FixedMax` (also in the heat map setup
+dialog) to pin the colour scale and legend to exactly `[FixedMin, FixedMax]`
+so different designs can be compared fairly; cells outside the range clamp to
+the end colours. The map rebuilds automatically when these change:
 
 ```tcl
 gui::set_heatmap Temperature FixedRange 1
 gui::set_heatmap Temperature FixedMin 40
 gui::set_heatmap Temperature FixedMax 60
-gui::set_heatmap Temperature rebuild
+gui::get_heatmap_double Temperature FixedMax
 ```
 
 ## Example scripts

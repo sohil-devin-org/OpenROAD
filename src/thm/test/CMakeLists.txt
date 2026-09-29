@@ -4,4 +4,7 @@
 or_integration_tests(
   "thm"
   TESTS
+  PASSFAIL_TESTS
+    heatmap_dump
+    heatmap_fixed_range
 )

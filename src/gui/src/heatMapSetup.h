@@ -77,6 +77,8 @@ class HeatMapSetup : public QDialog
   void addMultiChoiceOption(
       QFormLayout* layout,
       const web::HeatMapDataSource::MapSettingMultiChoice& option);
+  void addDoubleOption(QFormLayout* layout,
+                       const web::HeatMapDataSource::MapSettingDouble& option);
 };
 
 }  // namespace gui

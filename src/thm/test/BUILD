@@ -9,11 +9,19 @@ package(features = ["layering_check"])
 COMPULSORY_TESTS = [
 ]
 
+# From CMakeLists.txt or_integration_tests(PASSFAIL_TESTS
+# These need the Qt gui (--//:platform=gui); without it they report pass
+# without exercising anything, like src/gui/test.
+PASSFAIL_TESTS = [
+    "heatmap_dump",
+    "heatmap_fixed_range",
+]
+
 # Disabled tests
 MANUAL_TESTS = [
 ]
 
-ALL_TESTS = COMPULSORY_TESTS + MANUAL_TESTS
+ALL_TESTS = COMPULSORY_TESTS + PASSFAIL_TESTS + MANUAL_TESTS
 
 filegroup(
     name = "regression_resources",
@@ -43,8 +51,10 @@ filegroup(
 [
     regression_test(
         name = test_name,
+        check_log = False if test_name in PASSFAIL_TESTS else True,
+        check_passfail = True if test_name in PASSFAIL_TESTS else False,
         data = [":" + test_name + "_resources"],
-        tags = [] if test_name in COMPULSORY_TESTS else ["manual"],
+        tags = ["manual"] if test_name in MANUAL_TESTS else [],
         visibility = ["//visibility:public"],
     )
     for test_name in ALL_TESTS
