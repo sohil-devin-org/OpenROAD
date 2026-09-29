@@ -5,9 +5,10 @@
 #   openroad -exit src/thm/test/flow/check_invariance.tcl
 #
 # The golden check_invariance_gcd.defok was written with
-# THM_INVARIANCE_REGEN=1 by an openroad built from the physics-driven-placement
-# base branch (commit 5a311be7dc), whose src/gpl is identical to origin/master.
-# Regenerate it the same way after an intentional change to default placement.
+# THM_INVARIANCE_REGEN=1 by an openroad built from origin/master
+# (commit ebc7c5c79e, `bazelisk build --//:platform=gui //:openroad` in a
+# separate worktree).  Regenerate it the same way after an intentional change
+# to default placement.
 
 set flow_dir [file dirname [file normalize [info script]]]
 set test_dir [file dirname $flow_dir]

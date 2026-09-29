@@ -246,6 +246,30 @@ write_physics_animation
 | `-fps` | Frames per second (default 4). |
 | `-die` | Die to render for a two-die stack (default 0). |
 
+### Characterize Thermal Libraries
+
+Fits the leakage(T) and delay(T, V) models from the loaded liberty corners
+(`define_corners` + `read_liberty -corner`), optionally writing the fits as
+JSON for `set_thermal_config -leakage_fits/-derate_fits`.  Corners that do not
+isolate temperature or voltage (e.g. Nangate45 fast/typ/slow) fall back to the
+documented `leakage_beta_per_c`, `delay_tempco_per_c` and `delay_vcoef_per_v`
+defaults, which can be overridden with `set_thermal_config -set`.
+
+```tcl
+characterize_thermal_libraries
+    [-leakage_json file]
+    [-derate_json file]
+    [-corners {name ...}]
+```
+
+#### Options
+
+| Switch Name | Description |
+| ----- | ----- |
+| `-leakage_json` | Write the per-cell leakage(T) fits to this JSON file. |
+| `-derate_json` | Write the delay(T, V) fits to this JSON file. |
+| `-corners` | Liberty corner names to use (default: all corners). |
+
 ### Global Placement
 
 Physics-driven placement is enabled through the placer command; see the
@@ -387,6 +411,9 @@ All defaults live in `include/thm/ThermalConfig.h` with their citation.
 | EM reference temperature | 105 C | JEDEC qualification [JEP] |
 | Copper TCR | 3.9e-3 /K (ref 25 C) | [CRC] |
 | Nominal VDD | 1.8 V | sky130 |
+| Leakage fit fallback `leakage_beta_per_c` | ln(2)/10 C = 0.0693 /C | subthreshold leakage doubles every ~10 C [ROY] |
+| Delay fit fallback `delay_tempco_per_c` | 1.5 / 298.15 K = 5.03e-3 /C | alpha-power law with mobility ~ T^-1.5 [SN], [SZE] |
+| Delay fit fallback `delay_vcoef_per_v` | 1/1.8 - 1.3/1.4 = -0.37 /V | alpha-power law, alpha = 1.3, V_th = 0.4 V [SN] |
 
 References:
 
@@ -405,6 +432,14 @@ References:
   copper versus temperature.
 - [HB] Hybrid bonding effective conductivity survey (Cu/SiO2 interface
   ~1-4 W/mK effective); see also [3DI].
+- [ROY] K. Roy, S. Mukhopadhyay, H. Mahmoodi-Meimand, "Leakage Current
+  Mechanisms and Leakage Reduction Techniques in Deep-Submicrometer CMOS
+  Circuits," Proc. IEEE 91(2), 2003.
+- [SN] T. Sakurai, A. R. Newton, "Alpha-Power Law MOSFET Model and its
+  Applications to CMOS Inverter Delay and Other Formulas," IEEE JSSC 25(2),
+  1990.
+- [SZE] S. M. Sze, K. K. Ng, "Physics of Semiconductor Devices," 3rd ed.,
+  Wiley, 2007, Sec. 1.5.
 
 ## Example scripts
 
@@ -508,14 +543,16 @@ python3 etc/find_messages.py -d src/thm > src/thm/messages.txt
 
 ## Limitations
 
-- Leakage(T) and delay(T, V) fits require multi-temperature liberty
-  characterizations of the same process/voltage corner; without them leakage
-  stays at the STA value and derates are 1.0 (a warning is issued).
+- Leakage(T) and delay(T, V) fits (`characterize_thermal_libraries`) need
+  liberty corners that isolate temperature or voltage; when the loaded
+  corners also change the process (Nangate45 fast/typ/slow, sky130
+  ff/tt/ss) the cited fallback coefficients are used instead.
 - IR drop requires a routed power grid (`pdngen`) and a supply net with
   special wires; otherwise the nominal VDD is used (THM-0073).
-- The finite-volume solver currently falls back to the lumped per-column
-  reference solver; `write_physics_animation` and the thermal clock-skew
-  analysis are stubs that warn and produce no output.
+- `write_physics_animation` is a stub that warns and produces no output
+  (THM-0090); the flow scripts tolerate this.
+- The thermal clock-skew delta is the difference of the worst STA skew with
+  and without derates, not a clock-tree-aware thermal skew model.
 - The second die of a two-die stack is modeled with a uniform or mirrored
   power map, not a placed design.
 - Transient analysis replays sustained activity phases; it does not replay

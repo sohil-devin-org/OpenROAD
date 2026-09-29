@@ -145,12 +145,31 @@ proc json_number { report key } {
   return "nan"
 }
 
+# Half-perimeter wirelength of the signal nets from the placed pin bboxes.
+proc design_hpwl_um { } {
+  set block [ord::get_db_block]
+  set dbu [$block getDbUnitsPerMicron]
+  set hpwl 0
+  foreach net [$block getNets] {
+    if { [$net isSpecial] } {
+      continue
+    }
+    set bbox [$net getTermBBox]
+    set hpwl [expr { $hpwl + [$bbox dx] + [$bbox dy] }]
+  }
+  return [expr { double($hpwl) / $dbu }]
+}
+
 set columns {hpwl_um peak_temp_c avg_temp_c max_gradient_c_per_mm
              leakage_power_w worst_ir_drop_v wns_nominal_s wns_derated_s
              tns_nominal_s tns_derated_s}
 set row [list $bench_design $bench_mode $bench_config ok]
 foreach column $columns {
-  lappend row [json_number $report $column]
+  if { $column eq "hpwl_um" } {
+    lappend row [format %.1f [design_hpwl_um]]
+  } else {
+    lappend row [json_number $report $column]
+  }
 }
 lappend row [format %.2f $runtime_s]
 
