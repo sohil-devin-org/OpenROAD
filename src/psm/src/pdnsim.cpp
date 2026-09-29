@@ -176,9 +176,10 @@ const ThermalGrid& PDNSim::getThermalGrid() const
   return thermal_->getGrid();
 }
 
-const std::optional<ThermalHotRegion>& PDNSim::getThermalHotRegion() const
+const ThermalHotRegion* PDNSim::getThermalHotRegion() const
 {
-  return thermal_->getHotRegion();
+  const auto& region = thermal_->getHotRegion();
+  return region ? &region.value() : nullptr;
 }
 
 void PDNSim::setThermalColorRange(

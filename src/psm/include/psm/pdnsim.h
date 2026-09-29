@@ -136,7 +136,7 @@ class PDNSim : public odb::dbBlockCallBackObj
   // Thermal analysis through the external HotSpot simulator.
   bool analyzeThermal(const ThermalSettings& settings);
   const ThermalGrid& getThermalGrid() const;
-  const std::optional<ThermalHotRegion>& getThermalHotRegion() const;
+  const ThermalHotRegion* getThermalHotRegion() const;
   void setThermalColorRange(std::optional<std::pair<double, double>> range);
   std::optional<std::pair<double, double>> getThermalColorRange() const;
 
