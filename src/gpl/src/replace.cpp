@@ -32,6 +32,10 @@
 #include "utl/timer.h"
 #include "utl/validation.h"
 
+#ifdef ENABLE_GPU
+#include "gpu/gpuRuntime.h"
+#endif
+
 namespace gpl {
 
 using utl::GPL;
@@ -344,6 +348,14 @@ bool Replace::initNesterovPlace(const PlaceOptions& options,
                   "-physics_driven requires the thermal/physics engine "
                   "(thm) to be available.");
     }
+#ifdef ENABLE_GPU
+    if (gpuEnabled()) {
+      log_->error(GPL,
+                  202,
+                  "-physics_driven is not supported on the GPU placement "
+                  "path; disable GPU placement (ENABLE_GPU=0).");
+    }
+#endif
     tb_->setPhysicsModel(physics_);
   } else {
     tb_->setPhysicsModel(nullptr);
