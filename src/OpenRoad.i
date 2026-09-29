@@ -154,6 +154,13 @@ getPDNSim()
   return openroad->getPDNSim();
 }
 
+thm::ThermalAnalyzer*
+getThermalAnalyzer()
+{
+  OpenRoad *openroad = getOpenRoad();
+  return openroad->getThermalAnalyzer();
+}
+
 grt::GlobalRouter*
 getGlobalRouter()
 {

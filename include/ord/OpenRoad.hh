@@ -87,6 +87,10 @@ namespace drt {
 class TritonRoute;
 }
 
+namespace thm {
+class ThermalAnalyzer;
+}
+
 namespace psm {
 class PDNSim;
 }
@@ -179,6 +183,7 @@ class OpenRoad
   drt::TritonRoute* getTritonRoute() { return detailed_router_; }
   gpl::Replace* getReplace() { return replace_; }
   psm::PDNSim* getPDNSim() { return pdnsim_; }
+  thm::ThermalAnalyzer* getThermalAnalyzer() { return thermal_; }
   grt::GlobalRouter* getGlobalRouter() { return global_router_; }
   par::PartitionMgr* getPartitionMgr() { return partitionMgr_; }
   ant::AntennaChecker* getAntennaChecker() { return antenna_checker_; }
@@ -292,6 +297,7 @@ class OpenRoad
   ant::AntennaChecker* antenna_checker_ = nullptr;
   gpl::Replace* replace_ = nullptr;
   psm::PDNSim* pdnsim_ = nullptr;
+  thm::ThermalAnalyzer* thermal_ = nullptr;
   par::PartitionMgr* partitionMgr_ = nullptr;
   pdn::PdnGen* pdngen_ = nullptr;
   pad::ICeWall* icewall_ = nullptr;

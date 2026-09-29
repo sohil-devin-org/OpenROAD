@@ -1,0 +1,488 @@
+// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026, The OpenROAD Authors
+
+#include "thm/Thermal.h"
+
+#include <unistd.h>
+
+#include <algorithm>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <limits>
+#include <map>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include "db_sta/dbNetwork.hh"
+#include "db_sta/dbSta.hh"
+#include "heatMap.h"
+#include "hotspot.h"
+#include "odb/db.h"
+#include "sta/PowerClass.hh"
+#include "sta/Scene.hh"
+#include "utl/Logger.h"
+#include "web/heatMap.h"
+
+namespace thm {
+
+odb::Rect TemperatureGrid::cellRect(int row, int col) const
+{
+  const double dx = static_cast<double>(bounds.dx()) / cols;
+  const double dy = static_cast<double>(bounds.dy()) / rows;
+  const int x0 = bounds.xMin() + std::lround(col * dx);
+  const int x1 = (col == cols - 1)
+                     ? bounds.xMax()
+                     : bounds.xMin() + std::lround((col + 1) * dx);
+  const int y0 = bounds.yMin() + std::lround(row * dy);
+  const int y1 = (row == rows - 1)
+                     ? bounds.yMax()
+                     : bounds.yMin() + std::lround((row + 1) * dy);
+  return odb::Rect(x0, y0, x1, y1);
+}
+
+std::pair<int, int> TemperatureGrid::cellAt(const odb::Point& point) const
+{
+  const double dx = static_cast<double>(bounds.dx()) / cols;
+  const double dy = static_cast<double>(bounds.dy()) / rows;
+  int col = static_cast<int>((point.x() - bounds.xMin()) / dx);
+  int row = static_cast<int>((point.y() - bounds.yMin()) / dy);
+  col = std::clamp(col, 0, cols - 1);
+  row = std::clamp(row, 0, rows - 1);
+  return {row, col};
+}
+
+ThermalAnalyzer::ThermalAnalyzer(odb::dbDatabase* db,
+                                 sta::dbSta* sta,
+                                 utl::Logger* logger)
+    : db_(db), sta_(sta), logger_(logger)
+{
+  heatmap_source_ = web::registerHeatMapSource(
+      "Temperature", "Temperature", "Temperature", [this, logger]() {
+        return std::make_shared<TemperatureDataSource>(logger, this);
+      });
+}
+
+ThermalAnalyzer::~ThermalAnalyzer() = default;
+
+odb::dbBlock* ThermalAnalyzer::getBlock() const
+{
+  odb::dbChip* chip = db_->getChip();
+  if (chip == nullptr) {
+    return nullptr;
+  }
+  return chip->getBlock();
+}
+
+odb::Rect ThermalAnalyzer::getBounds() const
+{
+  odb::dbBlock* block = getBlock();
+  if (block == nullptr) {
+    return odb::Rect();
+  }
+  return block->getDieArea();
+}
+
+void ThermalAnalyzer::clearResults()
+{
+  grid_ = TemperatureGrid();
+  stats_ = ThermalStats();
+  last_inst_power_.clear();
+  last_corner_ = nullptr;
+  if (heatmap_source_) {
+    heatmap_source_->invalidateInstances();
+  }
+}
+
+odb::PtrMap<odb::dbInst, double> ThermalAnalyzer::getInstancePower(
+    sta::Scene* corner) const
+{
+  odb::PtrMap<odb::dbInst, double> powers;
+  odb::dbBlock* block = getBlock();
+  if (block == nullptr) {
+    return powers;
+  }
+  sta_->ensureGraph();
+  sta_->ensureLevelized();
+  sta::dbNetwork* network = sta_->getDbNetwork();
+  for (odb::dbInst* inst : block->getInsts()) {
+    if (!inst->getPlacementStatus().isPlaced()) {
+      continue;
+    }
+    if (inst->getMaster()->isCover()) {
+      continue;
+    }
+    sta::Instance* sta_inst = network->dbToSta(inst);
+    if (sta_inst == nullptr) {
+      continue;
+    }
+    sta::PowerResult power = sta_->power(sta_inst, corner);
+    powers[inst] = power.total();
+  }
+  return powers;
+}
+
+std::vector<PowerTile> ThermalAnalyzer::buildTiles(
+    const odb::Rect& bounds,
+    int tile_size,
+    const odb::PtrMap<odb::dbInst, double>& inst_power)
+{
+  std::vector<PowerTile> tiles;
+  if (tile_size <= 0 || bounds.dx() <= 0 || bounds.dy() <= 0) {
+    return tiles;
+  }
+  const int cols = (bounds.dx() + tile_size - 1) / tile_size;
+  const int rows = (bounds.dy() + tile_size - 1) / tile_size;
+  tiles.reserve(static_cast<size_t>(rows) * cols);
+  for (int row = 0; row < rows; row++) {
+    for (int col = 0; col < cols; col++) {
+      PowerTile tile;
+      tile.name = "t" + std::to_string(row) + "_" + std::to_string(col);
+      const int x0 = bounds.xMin() + col * tile_size;
+      const int y0 = bounds.yMin() + row * tile_size;
+      tile.rect = odb::Rect(x0,
+                            y0,
+                            std::min(x0 + tile_size, bounds.xMax()),
+                            std::min(y0 + tile_size, bounds.yMax()));
+      tiles.push_back(tile);
+    }
+  }
+
+  // Distribute each instance's power over the tiles it overlaps, weighted
+  // by overlap area.
+  for (const auto& [inst, power] : inst_power) {
+    if (power <= 0.0) {
+      continue;
+    }
+    odb::Rect box = inst->getBBox()->getBox();
+    odb::Rect clipped = box.intersect(bounds);
+    if (clipped.area() == 0) {
+      continue;
+    }
+    const int col0
+        = std::clamp((clipped.xMin() - bounds.xMin()) / tile_size, 0, cols - 1);
+    const int col1 = std::clamp(
+        (clipped.xMax() - 1 - bounds.xMin()) / tile_size, 0, cols - 1);
+    const int row0
+        = std::clamp((clipped.yMin() - bounds.yMin()) / tile_size, 0, rows - 1);
+    const int row1 = std::clamp(
+        (clipped.yMax() - 1 - bounds.yMin()) / tile_size, 0, rows - 1);
+    const double area = static_cast<double>(clipped.area());
+    for (int row = row0; row <= row1; row++) {
+      for (int col = col0; col <= col1; col++) {
+        PowerTile& tile = tiles[row * cols + col];
+        const double overlap
+            = static_cast<double>(tile.rect.intersect(clipped).area());
+        if (overlap > 0) {
+          tile.power_w += power * overlap / area;
+        }
+      }
+    }
+  }
+  return tiles;
+}
+
+ThermalStats ThermalAnalyzer::computeStats(
+    const TemperatureGrid& grid,
+    const odb::PtrMap<odb::dbInst, double>& inst_power,
+    int max_instances) const
+{
+  ThermalStats stats;
+  if (grid.empty()) {
+    return stats;
+  }
+  stats.peak_c = -std::numeric_limits<double>::infinity();
+  stats.min_c = std::numeric_limits<double>::infinity();
+  double sum = 0.0;
+  for (int row = 0; row < grid.rows; row++) {
+    for (int col = 0; col < grid.cols; col++) {
+      const double t = grid.at(row, col);
+      sum += t;
+      stats.min_c = std::min(stats.min_c, t);
+      if (t > stats.peak_c) {
+        stats.peak_c = t;
+        stats.peak_row = row;
+        stats.peak_col = col;
+      }
+    }
+  }
+  stats.average_c = sum / grid.temps_c.size();
+  stats.hottest_region = grid.cellRect(stats.peak_row, stats.peak_col);
+
+  std::vector<std::pair<double, odb::dbInst*>> insts;
+  for (const auto& [inst, power] : inst_power) {
+    stats.total_power_w += power;
+    if (inst->getBBox()->getBox().intersects(stats.hottest_region)) {
+      insts.emplace_back(power, inst);
+    }
+  }
+  std::sort(insts.begin(), insts.end(), [](const auto& a, const auto& b) {
+    if (a.first != b.first) {
+      return a.first > b.first;
+    }
+    return a.second->getName() < b.second->getName();
+  });
+  for (const auto& [power, inst] : insts) {
+    if (max_instances >= 0
+        && static_cast<int>(stats.hottest_insts.size()) >= max_instances) {
+      break;
+    }
+    stats.hottest_insts.push_back(inst);
+  }
+  return stats;
+}
+
+bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
+{
+  odb::dbBlock* block = getBlock();
+  if (block == nullptr) {
+    logger_->error(utl::THM, 1, "No design loaded.");
+  }
+  const odb::Rect bounds = getBounds();
+  if (bounds.dx() <= 0 || bounds.dy() <= 0) {
+    logger_->error(
+        utl::THM, 2, "Die area is not set; initialize the floorplan first.");
+  }
+  if (options.grid_rows <= 0 || options.grid_cols <= 0) {
+    logger_->error(utl::THM, 3, "Grid rows and columns must be positive.");
+  }
+
+  clearResults();
+  const int dbu = block->getDbUnitsPerMicron();
+
+  HotSpotAdapter hotspot(logger_, dbu);
+  const std::string binary = hotspot.findBinary(options.hotspot_binary);
+  if (binary.empty()) {
+    logger_->error(utl::THM,
+                   4,
+                   "HotSpot executable \"{}\" not found; use -hotspot_binary "
+                   "or add it to PATH.",
+                   options.hotspot_binary);
+  }
+
+  odb::PtrMap<odb::dbInst, double> inst_power = getInstancePower(corner);
+  if (inst_power.empty()) {
+    logger_->error(utl::THM, 5, "No placed instances found.");
+  }
+
+  int tile_size = static_cast<int>(std::lround(options.tile_size_um * dbu));
+  if (tile_size <= 0) {
+    tile_size = std::max(1, std::max(bounds.dx(), bounds.dy()) / 32);
+  }
+  std::vector<PowerTile> tiles = buildTiles(bounds, tile_size, inst_power);
+  double total_power = 0.0;
+  for (const auto& tile : tiles) {
+    total_power += tile.power_w;
+  }
+  logger_->info(utl::THM,
+                10,
+                "Thermal analysis: {} instances, {} tiles of {:.2f} um, total "
+                "power {:.4g} W, HotSpot grid {}x{}.",
+                inst_power.size(),
+                tiles.size(),
+                static_cast<double>(tile_size) / dbu,
+                total_power,
+                options.grid_rows,
+                options.grid_cols);
+  if (total_power <= 0.0) {
+    logger_->warn(utl::THM,
+                  11,
+                  "Total instance power is zero; the temperature map will be "
+                  "uniform at ambient. Check liberty/activity setup.");
+  }
+
+  // Work directory
+  std::filesystem::path work_dir;
+  bool remove_work_dir = false;
+  if (!options.work_dir.empty()) {
+    work_dir = options.work_dir;
+    std::filesystem::create_directories(work_dir);
+  } else {
+    work_dir = std::filesystem::temp_directory_path()
+               / ("openroad_thermal_" + std::to_string(::getpid()));
+    std::filesystem::create_directories(work_dir);
+    remove_work_dir = !options.keep_files;
+  }
+  const std::string base = (work_dir / block->getName()).string();
+  const std::string flp = base + ".flp";
+  const std::string ptrace = base + ".ptrace";
+  const std::string steady = base + ".steady";
+  const std::string grid_steady = base + ".grid.steady";
+  const std::string log = base + ".hotspot.log";
+  std::string config = options.hotspot_config;
+  if (config.empty()) {
+    config = base + ".config";
+    hotspot.writeConfig(
+        config, options.ambient_c, options.grid_rows, options.grid_cols);
+  }
+
+  hotspot.writeFloorplan(flp, tiles, bounds);
+  hotspot.writePowerTrace(ptrace, tiles);
+
+  bool ok = hotspot.run(binary,
+                        config,
+                        flp,
+                        ptrace,
+                        options.grid_rows,
+                        options.grid_cols,
+                        steady,
+                        grid_steady,
+                        log);
+  TemperatureGrid grid;
+  if (ok) {
+    ok = hotspot.readGridSteady(
+        grid_steady, options.grid_rows, options.grid_cols, bounds, grid);
+  }
+  if (remove_work_dir) {
+    std::error_code ec;
+    std::filesystem::remove_all(work_dir, ec);
+  } else {
+    logger_->info(utl::THM, 12, "HotSpot files kept in {}.", work_dir.string());
+  }
+  if (!ok) {
+    logger_->error(utl::THM, 6, "HotSpot thermal analysis failed.");
+  }
+
+  grid_ = std::move(grid);
+  last_inst_power_ = std::move(inst_power);
+  last_corner_ = corner;
+  stats_ = computeStats(grid_, last_inst_power_, options.report_instances);
+  if (heatmap_source_) {
+    heatmap_source_->invalidateInstances();
+  }
+  report(options.report_file);
+  return true;
+}
+
+void ThermalAnalyzer::report(const std::string& file) const
+{
+  if (!hasResults()) {
+    logger_->warn(
+        utl::THM, 13, "No thermal results; run analyze_thermal first.");
+    return;
+  }
+  odb::dbBlock* block = getBlock();
+  const double dbu = block->getDbUnitsPerMicron();
+  const odb::Rect& region = stats_.hottest_region;
+
+  std::ostringstream out;
+  out << "Thermal analysis report\n";
+  out << "-----------------------\n";
+  out << fmt::format(
+      "Grid:                {} x {} cells over die {:.2f} x {:.2f} um\n",
+      grid_.cols,
+      grid_.rows,
+      grid_.bounds.dx() / dbu,
+      grid_.bounds.dy() / dbu);
+  out << fmt::format("Total power:         {:.4g} W\n", stats_.total_power_w);
+  out << fmt::format("Peak temperature:    {:.2f} C\n", stats_.peak_c);
+  out << fmt::format("Average temperature: {:.2f} C\n", stats_.average_c);
+  out << fmt::format("Min temperature:     {:.2f} C\n", stats_.min_c);
+  out << fmt::format(
+      "Hottest region:      ({:.2f}, {:.2f}) - ({:.2f}, {:.2f}) um "
+      "[row {}, col {}]\n",
+      region.xMin() / dbu,
+      region.yMin() / dbu,
+      region.xMax() / dbu,
+      region.yMax() / dbu,
+      stats_.peak_row,
+      stats_.peak_col);
+  out << fmt::format("Instances in hottest region ({} shown):\n",
+                     stats_.hottest_insts.size());
+  for (odb::dbInst* inst : stats_.hottest_insts) {
+    const auto it = last_inst_power_.find(inst);
+    const double power = it == last_inst_power_.end() ? 0.0 : it->second;
+    out << fmt::format("  {:<40} {:<30} {:.4g} W\n",
+                       inst->getName(),
+                       inst->getMaster()->getName(),
+                       power);
+  }
+
+  logger_->report("{}", out.str());
+  if (!file.empty()) {
+    std::ofstream stream(file);
+    if (!stream) {
+      logger_->error(utl::THM, 7, "Cannot open report file {}.", file);
+    }
+    stream << out.str();
+  }
+}
+
+void ThermalAnalyzer::writeTemperatureCsv(const std::string& file) const
+{
+  if (!hasResults()) {
+    logger_->error(
+        utl::THM, 8, "No thermal results; run analyze_thermal first.");
+  }
+  std::ofstream stream(file);
+  if (!stream) {
+    logger_->error(utl::THM, 9, "Cannot open {}.", file);
+  }
+  const double dbu = getBlock()->getDbUnitsPerMicron();
+  stream << "x_min,y_min,x_max,y_max,temperature_c\n";
+  for (int row = 0; row < grid_.rows; row++) {
+    for (int col = 0; col < grid_.cols; col++) {
+      const odb::Rect rect = grid_.cellRect(row, col);
+      stream << fmt::format("{:.3f},{:.3f},{:.3f},{:.3f},{:.3f}\n",
+                            rect.xMin() / dbu,
+                            rect.yMin() / dbu,
+                            rect.xMax() / dbu,
+                            rect.yMax() / dbu,
+                            grid_.at(row, col));
+    }
+  }
+}
+
+bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
+{
+  odb::dbBlock* block = getBlock();
+  if (block == nullptr) {
+    logger_->error(utl::THM, 17, "No design loaded.");
+  }
+  std::ifstream stream(file);
+  if (!stream) {
+    logger_->error(utl::THM, 14, "Cannot open temperature grid {}.", file);
+  }
+  TemperatureGrid grid;
+  grid.bounds = getBounds();
+  std::string line;
+  while (std::getline(stream, line)) {
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+    std::vector<double> row;
+    std::stringstream ss(line);
+    std::string token;
+    while (std::getline(ss, token, ',')) {
+      if (!token.empty()) {
+        row.push_back(std::stod(token));
+      }
+    }
+    if (row.empty()) {
+      continue;
+    }
+    if (grid.cols == 0) {
+      grid.cols = row.size();
+    } else if (static_cast<int>(row.size()) != grid.cols) {
+      logger_->error(utl::THM, 15, "Inconsistent row length in {}.", file);
+    }
+    grid.temps_c.insert(grid.temps_c.end(), row.begin(), row.end());
+    grid.rows++;
+  }
+  if (grid.empty()) {
+    logger_->error(utl::THM, 16, "No temperatures found in {}.", file);
+  }
+  clearResults();
+  grid_ = std::move(grid);
+  last_corner_ = sta_->cmdScene();
+  last_inst_power_ = getInstancePower(last_corner_);
+  stats_ = computeStats(grid_, last_inst_power_, 10);
+  if (heatmap_source_) {
+    heatmap_source_->invalidateInstances();
+  }
+  return true;
+}
+
+}  // namespace thm
