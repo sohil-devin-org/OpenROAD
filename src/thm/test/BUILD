@@ -7,6 +7,9 @@ package(features = ["layering_check"])
 
 # From CMakeLists.txt or_integration_tests(TESTS
 COMPULSORY_TESTS = [
+    "analyze_thermal_errors",
+    "analyze_thermal_fake",
+    "read_temperature_grid",
 ]
 
 # Disabled tests
@@ -21,6 +24,7 @@ filegroup(
     # but at least it is not a glob of everything and there are
     # per test glob patterns below.
     srcs = [
+        "fake_hotspot.py",
         "helpers.tcl",
         "sky130hd/sky130_fd_sc_hd__tt_025C_1v80.lib",
         "sky130hd/sky130hd.tlef",

@@ -1,0 +1,23 @@
+[INFO ODB-0227] LEF file: sky130hd/sky130hd.tlef, created 13 layers, 25 vias
+[INFO ODB-0227] LEF file: sky130hd/sky130hd_std_cell.lef, created 437 library cells
+[INFO ODB-0128] Design: gcd
+[INFO ODB-0130]     Created 54 pins.
+[INFO ODB-0131]     Created 1278 components and 3411 component-terminals.
+[INFO ODB-0132]     Created 2 special nets and 2554 connections.
+[INFO ODB-0133]     Created 274 nets and 855 connections.
+[ERROR THM-0004] HotSpot executable "/no/such/dir/hotspot" not found; use -hotspot_binary or add it to PATH.
+THM-0004
+[ERROR THM-0004] HotSpot executable "no_such_hotspot_binary" not found; use -hotspot_binary or add it to PATH.
+THM-0004
+[WARNING THM-0013] No thermal results; run analyze_thermal first.
+has results: 0
+[ERROR THM-0008] No thermal results; run analyze_thermal first.
+THM-0008
+[INFO THM-0010] Thermal analysis: 1278 instances, 1056 tiles of 9.38 um, total power 0.0008076 W, HotSpot grid 4x4.
+[ERROR THM-0006] HotSpot thermal analysis failed.
+THM-0006
+has results: 0
+--- hotspot log
+fatal: simulated HotSpot failure
+[ERROR THM-0020] HotSpot config file /no/such/hotspot.config does not exist.
+THM-0020

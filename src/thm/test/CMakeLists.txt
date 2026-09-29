@@ -4,4 +4,7 @@
 or_integration_tests(
   "thm"
   TESTS
+    analyze_thermal_errors
+    analyze_thermal_fake
+    read_temperature_grid
 )

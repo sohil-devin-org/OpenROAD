@@ -124,6 +124,15 @@ Simply run the following script:
 - The whole die is modelled as a single silicon layer; macros and standard
   cells are treated alike and package parameters come from the HotSpot
   configuration.
+- HotSpot accepts at most 8192 floorplan units, so the number of power tiles
+  (`ceil(die_width / tile_size) * ceil(die_height / tile_size)`) must stay
+  below that; increase `-tile_size` for large dies.
+- HotSpot reports grid temperatures with two decimals, so small designs with
+  a few milliwatts of power show only a few tenths of a degree of spatial
+  variation over the ambient temperature.
+- HotSpot runs as a separate process through `/bin/sh`; its output is kept in
+  `<work_dir>/<block>.hotspot.log` and is only preserved with `-keep_files`
+  or `-work_dir`.
 
 ## FAQs
 
