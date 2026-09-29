@@ -28,6 +28,15 @@
 //        resistivity of copper vs temperature (alpha ~ 3.9e-3 / K).
 //  [HB]  P. Batude et al. / hybrid bonding effective conductivity survey:
 //        Cu/SiO2 hybrid bond interface ~ 1-4 W/mK effective (see also [3DI]).
+//  [ROY] K. Roy, S. Mukhopadhyay, H. Mahmoodi-Meimand, "Leakage Current
+//        Mechanisms and Leakage Reduction Techniques in Deep-Submicrometer
+//        CMOS Circuits," Proc. IEEE 91(2), 2003 (subthreshold leakage grows
+//        exponentially with T; roughly doubles every ~10 C, cf. ITRS).
+//  [SN]  T. Sakurai, A. R. Newton, "Alpha-Power Law MOSFET Model and its
+//        Applications to CMOS Inverter Delay and Other Formulas," IEEE JSSC
+//        25(2), 1990: t_d ~ C V / (I_D0 (V - V_th)^alpha), alpha ~ 1.3.
+//  [SZE] S. M. Sze, K. K. Ng, "Physics of Semiconductor Devices," 3rd ed.,
+//        Wiley, 2007, Sec. 1.5 (lattice-scattering mobility mu ~ T^-1.5).
 
 namespace thm {
 
@@ -164,6 +173,28 @@ struct ThermalConfig
   // Nominal supply voltage used when no IR-drop analysis is available.
   double nominal_vdd_v = 1.8;
   bool include_ir_drop = true;
+
+  // Library-fit fallbacks.  Used by LeakageModel / DerateModel only when the
+  // loaded liberty corners do not isolate temperature (or voltage), e.g.
+  // Nangate45 fast/typ/slow or sky130 ff/tt/ss where process changes too.
+  // Overridable with set_thermal_config -set <key> <value>.
+  //
+  // Subthreshold leakage doubles roughly every 10 C [ROY]:
+  //   L(T) = L(T_ref) exp(beta (T - T_ref)),  beta = ln(2) / 10 C.
+  double leakage_beta_per_c = 0.0693147180559945;
+  // Delay temperature coefficient (fraction per C).  In the alpha-power law
+  // [SN] the drive current follows the carrier mobility, mu ~ T^-1.5 [SZE],
+  // so d ln(t_d)/dT = 1.5 / T_nom with T_nom = 298.15 K (25 C):
+  //   1.5 / 298.15 K = 5.03e-3 / C
+  // (the V_th(T) reduction that partly offsets this at high V is neglected,
+  // which is the pessimistic direction for temperature-driven placement).
+  double delay_tempco_per_c = 5.03e-3;
+  // Delay voltage coefficient (fraction per V) from the alpha-power law [SN]
+  // t_d ~ V / (V - V_th)^alpha linearized at the nominal supply:
+  //   d ln(t_d)/dV = 1/V - alpha / (V - V_th)
+  // with alpha = 1.3 [SN], V = 1.8 V and V_th/V = 0.22 (V_th = 0.4 V):
+  //   1/1.8 - 1.3/1.4 = -0.37 / V.
+  double delay_vcoef_per_v = -0.37;
 
   // Build the full vertical stack for the configured dies.
   std::vector<StackLayer> buildStack() const;

@@ -289,3 +289,32 @@ proc reset_thermal { args } {
   thm::reset_thermal_cmd
 }
 }
+
+################################################################
+# Library characterization: leakage(T) and delay(T, V) fits from the loaded
+# liberty corners.
+
+sta::define_cmd_args "characterize_thermal_libraries" { \
+    [-leakage_json file] \
+    [-derate_json file] \
+    [-corners {name ...}]}
+
+proc characterize_thermal_libraries { args } {
+  sta::parse_key_args "characterize_thermal_libraries" args \
+    keys {-leakage_json -derate_json -corners} flags {}
+  sta::check_argc_eq0 "characterize_thermal_libraries" $args
+  set corners {}
+  if { [info exists keys(-corners)] } {
+    set corners $keys(-corners)
+  }
+  set leakage_json ""
+  if { [info exists keys(-leakage_json)] } {
+    set leakage_json $keys(-leakage_json)
+  }
+  set derate_json ""
+  if { [info exists keys(-derate_json)] } {
+    set derate_json $keys(-derate_json)
+  }
+  return [thm::characterize_libraries_cmd [join $corners " "] $leakage_json \
+    $derate_json]
+}
