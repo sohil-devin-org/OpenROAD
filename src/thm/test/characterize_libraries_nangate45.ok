@@ -54,7 +54,7 @@ Thermal configuration
   Leakage model: default beta 0.0693147 /C (no fit; leakage doubling per ~10 C, Roy et al. 2003), 3 corners
   Derate model: nominal 25 C / 1.1 V, temperature default 0.00503 /C (Sakurai-Newton alpha-power law), voltage default -0.37 /V (Sakurai-Newton alpha-power law)
 
-[INFO THM-0072] Applied physics derates to 624 instances.
+[INFO THM-0072] Applied physics derates to 0 instances.
 [INFO THM-0030] analyze_thermal: peak 25.00 C, avg 25.00 C, max gradient 0.01 C/mm, power 0.0002 W (leakage 0.0001 W), 2 loop iterations
 [INFO THM-0033]   WNS nominal 7.7580e-09 s, derated 7.7580e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
 Physics report (analyze_thermal)

@@ -549,7 +549,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
     }
     const double thermal_power_w = phys.dynamic_power_w + phys.leakage_power_w;
     const double delta_w = thermal_power_w - sta_power_w;
-    if (std::abs(delta_w) <= 1e-9 * std::max(thermal_power_w, sta_power_w)) {
+    if (std::abs(delta_w) <= 1e-5 * std::max(thermal_power_w, sta_power_w)) {
       continue;
     }
     psm_->setInstPower(inst, corner, static_cast<float>(delta_w));
