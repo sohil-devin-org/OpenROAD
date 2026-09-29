@@ -111,6 +111,14 @@ if { ![gui::supported] } {
   check_double "wide min" $min 30.0
   check_double "wide max" $max 80.0
 
+  # Equal endpoints show a 1 degC band centred on the value: 50 sits in the
+  # middle, everything else clamps to one end.
+  gui::set_heatmap Temperature FixedMin 50
+  gui::set_heatmap Temperature FixedMax 50
+  lassign [dump_range equal_range] min max count_min count_max
+  check_double "equal min" $min 49.5
+  check_double "equal max" $max 50.5
+
   # Turning the fixed range off restores the automatic range.
   gui::set_heatmap Temperature FixedRange 0
   lassign [dump_range auto_range_again] min max count_min count_max

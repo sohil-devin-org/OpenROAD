@@ -92,3 +92,18 @@ has results: 0
 [ERROR THM-0006] HotSpot thermal analysis failed.
 THM-0006
 has results: 0
+[INFO THM-0010] Thermal analysis: 1277 instances, 1024 tiles of 9.38 um, total power 0.0007734 W, HotSpot grid 4x4.
+[WARNING THM-0039] Duplicate entry for cell 3 at line 6 of results/analyze_thermal_errors_grid/gcd.grid.steady.
+[ERROR THM-0006] HotSpot thermal analysis failed.
+THM-0006
+has results: 0
+[ERROR THM-0022] Grid 4x400000 is finer than the die (299960 x 300130 database units); reduce -grid_rows/-grid_cols.
+THM-0022
+[ERROR THM-0023] Grid 2048x2048 exceeds the limit of 1048576 cells.
+THM-0023
+[ERROR THM-0024] Invalid temperature "nan" in results/analyze_thermal_errors_grid/bad_grid_nan.csv.
+THM-0024
+has results: 0
+[ERROR THM-0024] Invalid temperature "hot" in results/analyze_thermal_errors_grid/bad_grid_text.csv.
+THM-0024
+has results: 0

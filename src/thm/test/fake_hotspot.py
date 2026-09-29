@@ -8,7 +8,7 @@
 # a grid steady file (HotSpot layout: "Layer <n>:" sections with rows*cols
 # "<index>\t<kelvin>" lines indexed row-major from the top-left corner) whose
 # temperature is ambient + K_PER_WATT * power of the tile covering each cell.
-# FAKE_HOTSPOT_GRID=truncated|garbage in the environment makes it write a
+# FAKE_HOTSPOT_GRID=truncated|garbage|duplicate in the environment makes it write a
 # broken silicon layer to exercise the reader's error handling.
 
 import os
@@ -140,6 +140,8 @@ def main():
                     break
                 if layer == 0 and broken == "garbage" and index == 3:
                     f.write("nan\tnot-a-temperature\n")
+                if layer == 0 and broken == "duplicate" and index == 4:
+                    index = 3
                 f.write("{}\t{:.2f}\n".format(index, temp if layer == 0 else
                                               ambient))
     if "steady_file" in args:

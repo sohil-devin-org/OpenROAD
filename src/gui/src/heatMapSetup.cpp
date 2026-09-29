@@ -5,6 +5,7 @@
 
 #include <QComboBox>
 #include <QDialog>
+#include <QDoubleSpinBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QListWidget>
@@ -12,6 +13,8 @@
 #include <QString>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <variant>
 
@@ -390,6 +393,15 @@ void HeatMapSetup::addDoubleOption(
     const web::HeatMapDataSource::MapSettingDouble& option)
 {
   QDoubleSpinBox* spin_box = new QDoubleSpinBox(this);
+  // Enough decimals to show the step and values set from Tcl without
+  // rounding them when the control is edited.
+  int decimals = 0;
+  for (double step = option.step;
+       step > 0 && decimals < 6 && std::abs(step - std::round(step)) > 1e-9;
+       step *= 10) {
+    decimals++;
+  }
+  spin_box->setDecimals(std::max(3, decimals));
   spin_box->setRange(option.minimum, option.maximum);
   spin_box->setSingleStep(option.step);
   spin_box->setValue(option.getter());

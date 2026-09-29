@@ -5,6 +5,7 @@
 
 #include <sys/wait.h>
 
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -298,7 +299,7 @@ bool HotSpotAdapter::readGridSteady(const std::string& file,
     std::istringstream ss(line);
     size_t index = 0;
     double temp = 0.0;
-    if (!(ss >> index >> temp) || index >= cells) {
+    if (!(ss >> index >> temp) || index >= cells || !std::isfinite(temp)) {
       logger_->warn(utl::THM,
                     37,
                     "Unexpected entry \"{}\" at line {} of {}.",
@@ -307,10 +308,17 @@ bool HotSpotAdapter::readGridSteady(const std::string& file,
                     file);
       return false;
     }
-    if (!seen[index]) {
-      seen[index] = true;
-      count++;
+    if (seen[index]) {
+      logger_->warn(utl::THM,
+                    39,
+                    "Duplicate entry for cell {} at line {} of {}.",
+                    index,
+                    line_no,
+                    file);
+      return false;
     }
+    seen[index] = true;
+    count++;
     kelvin[index] = temp;
   }
   if (count != cells) {

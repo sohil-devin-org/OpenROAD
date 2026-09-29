@@ -110,7 +110,7 @@ class ThermalAnalyzer
   // Runs the full pipeline: per instance power from OpenSTA -> tiles ->
   // HotSpot floorplan/power trace -> HotSpot grid model -> temperature grid.
   // Returns true on success; results are available through the getters.
-  bool analyze(sta::Scene* corner, const ThermalOptions& options);
+  void analyze(sta::Scene* corner, const ThermalOptions& options);
 
   bool hasResults() const { return !grid_.empty(); }
   const TemperatureGrid& getTemperatureGrid() const { return grid_; }
@@ -137,6 +137,7 @@ class ThermalAnalyzer
       const TemperatureGrid& grid,
       const odb::PtrMap<odb::dbInst, double>& inst_power,
       int max_instances);
+  void checkGridSize(int rows, int cols, const odb::Rect& bounds) const;
 
   // Logs the report; also writes it to `file` when non-empty.
   void report(const std::string& file = "") const;
@@ -147,7 +148,7 @@ class ThermalAnalyzer
   // Loads a temperature grid directly (bypassing HotSpot); used by tests and
   // to view externally produced results.  The file has one row per line,
   // bottom row first, comma separated temperatures in Celsius.
-  bool readTemperatureGrid(const std::string& file);
+  void readTemperatureGrid(const std::string& file);
 
   // Analysis area: the die area.
   odb::Rect getBounds() const;

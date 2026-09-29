@@ -6,8 +6,10 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <limits>
@@ -28,6 +30,38 @@
 #include "web/heatMap.h"
 
 namespace thm {
+
+namespace {
+
+// Largest temperature grid that is accepted (analysis or import); HotSpot
+// itself becomes impractical well before this.
+constexpr int64_t kMaxGridCells = int64_t{1} << 20;
+
+// Block names may contain path separators; keep the HotSpot files inside the
+// work directory.
+std::string fileSafeName(const std::string& name)
+{
+  std::string safe = name;
+  for (char& c : safe) {
+    if (!std::isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '-'
+        && c != '.') {
+      c = '_';
+    }
+  }
+  if (safe.empty() || safe == "." || safe == "..") {
+    safe = "design";
+  }
+  return safe;
+}
+
+bool parseTemperature(const std::string& token, double& value)
+{
+  char* end = nullptr;
+  value = std::strtod(token.c_str(), &end);
+  return end != token.c_str() && *end == '\0' && std::isfinite(value);
+}
+
+}  // namespace
 
 odb::Rect TemperatureGrid::cellRect(int row, int col) const
 {
@@ -169,7 +203,7 @@ std::vector<PowerTile> ThermalAnalyzer::buildTiles(
   }
 
   // Distribute each instance's power over the tiles it overlaps, weighted
-  // by overlap area.
+  // by overlap area; the part of an instance outside the die is not modeled.
   const auto col_at = [&](int x) {
     const int64_t offset = x - bounds.xMin();
     return static_cast<int>(
@@ -193,7 +227,7 @@ std::vector<PowerTile> ThermalAnalyzer::buildTiles(
     const int col1 = std::min(cols - 1, col_at(clipped.xMax() - 1) + 1);
     const int row0 = std::max(0, row_at(clipped.yMin()) - 1);
     const int row1 = std::min(rows - 1, row_at(clipped.yMax() - 1) + 1);
-    const double area = static_cast<double>(clipped.area());
+    const double area = static_cast<double>(box.area());
     for (int row = row0; row <= row1; row++) {
       for (int col = col0; col <= col1; col++) {
         PowerTile& tile = tiles[row * cols + col];
@@ -263,7 +297,7 @@ ThermalStats ThermalAnalyzer::computeStats(
   return stats;
 }
 
-bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
+void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
 {
   // A failed analysis must not leave the previous results behind.
   clearResults();
@@ -279,6 +313,7 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
   if (options.grid_rows <= 0 || options.grid_cols <= 0) {
     logger_->error(utl::THM, 3, "Grid rows and columns must be positive.");
   }
+  checkGridSize(options.grid_rows, options.grid_cols, bounds);
 
   const int dbu = block->getDbUnitsPerMicron();
 
@@ -353,12 +388,21 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
     work_dir = options.work_dir;
     std::filesystem::create_directories(work_dir);
   } else {
-    work_dir = std::filesystem::temp_directory_path()
-               / ("openroad_thermal_" + std::to_string(::getpid()));
-    std::filesystem::create_directories(work_dir);
+    // A fresh directory per run, so -keep_files output is never removed by a
+    // later run in the same session.
+    std::string dir_template
+        = (std::filesystem::temp_directory_path() / "openroad_thermal_XXXXXX")
+              .string();
+    if (::mkdtemp(dir_template.data()) == nullptr) {
+      logger_->error(utl::THM,
+                     21,
+                     "Cannot create a work directory under {}; use -work_dir.",
+                     std::filesystem::temp_directory_path().string());
+    }
+    work_dir = dir_template;
     remove_work_dir = !options.keep_files;
   }
-  const std::string base = (work_dir / block->getName()).string();
+  const std::string base = (work_dir / fileSafeName(block->getName())).string();
   const std::string flp = base + ".flp";
   const std::string ptrace = base + ".ptrace";
   const std::string steady = base + ".steady";
@@ -405,7 +449,30 @@ bool ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
     heatmap_source_->invalidateInstances();
   }
   report(options.report_file);
-  return true;
+}
+
+void ThermalAnalyzer::checkGridSize(int rows,
+                                    int cols,
+                                    const odb::Rect& bounds) const
+{
+  if (rows > bounds.dy() || cols > bounds.dx()) {
+    logger_->error(utl::THM,
+                   22,
+                   "Grid {}x{} is finer than the die ({} x {} database units); "
+                   "reduce -grid_rows/-grid_cols.",
+                   cols,
+                   rows,
+                   bounds.dx(),
+                   bounds.dy());
+  }
+  if (static_cast<int64_t>(rows) * cols > kMaxGridCells) {
+    logger_->error(utl::THM,
+                   23,
+                   "Grid {}x{} exceeds the limit of {} cells.",
+                   cols,
+                   rows,
+                   kMaxGridCells);
+  }
 }
 
 void ThermalAnalyzer::report(const std::string& file) const
@@ -483,7 +550,7 @@ void ThermalAnalyzer::writeTemperatureCsv(const std::string& file) const
   }
 }
 
-bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
+void ThermalAnalyzer::readTemperatureGrid(const std::string& file)
 {
   odb::dbBlock* block = getBlock();
   if (block == nullptr) {
@@ -504,9 +571,15 @@ bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
     std::stringstream ss(line);
     std::string token;
     while (std::getline(ss, token, ',')) {
-      if (!token.empty()) {
-        row.push_back(std::stod(token));
+      if (token.empty()) {
+        continue;
       }
+      double value = 0.0;
+      if (!parseTemperature(token, value)) {
+        logger_->error(
+            utl::THM, 24, "Invalid temperature \"{}\" in {}.", token, file);
+      }
+      row.push_back(value);
     }
     if (row.empty()) {
       continue;
@@ -522,6 +595,7 @@ bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
   if (grid.empty()) {
     logger_->error(utl::THM, 16, "No temperatures found in {}.", file);
   }
+  checkGridSize(grid.rows, grid.cols, grid.bounds);
   clearResults();
   grid_ = std::move(grid);
   last_corner_ = sta_->cmdScene();
@@ -529,7 +603,6 @@ bool ThermalAnalyzer::readTemperatureGrid(const std::string& file)
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
   }
-  return true;
 }
 
 }  // namespace thm

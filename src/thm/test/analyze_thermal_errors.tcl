@@ -81,7 +81,7 @@ puts $msg
 # messages machine independent).
 set grid_dir [file join results analyze_thermal_errors_grid]
 file mkdir $grid_dir
-foreach broken { truncated garbage } {
+foreach broken { truncated garbage duplicate } {
   set ::env(FAKE_HOTSPOT_GRID) $broken
   catch { analyze_thermal -hotspot_binary $fake_hotspot -work_dir $grid_dir \
     -grid_rows 4 -grid_cols 4 } msg
@@ -89,3 +89,26 @@ foreach broken { truncated garbage } {
   puts "has results: [thm::has_thermal_results]"
 }
 unset ::env(FAKE_HOTSPOT_GRID)
+
+# Grid dimensions: finer than the die (300 um = 300000 DBU per side) or too
+# many cells are rejected before anything is allocated.
+catch { analyze_thermal -hotspot_binary $fake_hotspot -work_dir $work_dir \
+  -grid_rows 400000 -grid_cols 4 } msg
+puts $msg
+catch { analyze_thermal -hotspot_binary $fake_hotspot -work_dir $work_dir \
+  -grid_rows 2048 -grid_cols 2048 } msg
+puts $msg
+
+# Imported grids must contain finite numbers (relative path: see above).
+foreach { name content } {
+  bad_grid_nan "45.0,46.0\nnan,47.0\n"
+  bad_grid_text "45.0,46.0\n47.0,hot\n"
+} {
+  set csv [file join $grid_dir $name.csv]
+  set stream [open $csv w]
+  puts -nonewline $stream [subst -nocommands -novariables $content]
+  close $stream
+  catch { thm::read_temperature_grid_cmd $csv } msg
+  puts $msg
+  puts "has results: [thm::has_thermal_results]"
+}

@@ -48,7 +48,7 @@ analyze_thermal
 | `-work_dir` | Directory for the generated HotSpot inputs and outputs. Defaults to a temporary directory. |
 | `-keep_files` | Keep the generated HotSpot files. |
 | `-tile_size` | Size in microns of the square tiles instance power is binned into. Defaults to the die size divided by 32. |
-| `-grid_rows`, `-grid_cols` | Resolution of the HotSpot grid model. Defaults to 64 x 64. |
+| `-grid_rows`, `-grid_cols` | Resolution of the HotSpot grid model. Defaults to 64 x 64. Each dimension is limited to the die size in database units and the grid to 2^20 cells. |
 | `-ambient` | Ambient temperature in degrees Celsius. Defaults to 45. |
 | `-report_instances` | Number of instances to list for the hottest region. Defaults to 10. |
 | `-report_file` | Also write the report to this file. |
@@ -94,7 +94,8 @@ By default the colour scale spans the real min/max of the grid. Enable
 `FixedRange` together with `FixedMin`/`FixedMax` (also in the heat map setup
 dialog) to pin the colour scale and legend to exactly `[FixedMin, FixedMax]`
 so different designs can be compared fairly; cells outside the range clamp to
-the end colours. The map rebuilds automatically when these change:
+the end colours (equal endpoints show a 1 °C band centred on the value). The
+map rebuilds automatically when these change:
 
 ```tcl
 gui::set_heatmap Temperature FixedRange 1

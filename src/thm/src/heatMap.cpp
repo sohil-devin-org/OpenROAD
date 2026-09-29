@@ -212,8 +212,16 @@ void TemperatureDataSource::correctMapScale(HeatMapDataSource::Map& map)
 void TemperatureDataSource::determineMinMax(const HeatMapDataSource::Map& map)
 {
   if (fixed_range_) {
-    setMinValue(std::min(fixed_min_, fixed_max_));
-    setMaxValue(std::max(fixed_min_, fixed_max_));
+    double min = std::min(fixed_min_, fixed_max_);
+    double max = std::max(fixed_min_, fixed_max_);
+    if (min == max) {
+      // Equal endpoints: show a 1 degC band centred on the value so the legend
+      // and the colours describe the same interval.
+      min -= 0.5;
+      max += 0.5;
+    }
+    setMinValue(min);
+    setMaxValue(max);
     return;
   }
 
