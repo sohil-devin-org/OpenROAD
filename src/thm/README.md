@@ -621,6 +621,10 @@ python3 etc/find_messages.py -d src/thm > src/thm/messages.txt
 - IR drop requires a routed power grid (`pdngen`) and voltage sources
   (`-vsrc` or PDNSim's own); the grid resistance is not corrected for
   temperature (no public PDNSim hook).
+- The temperature-aware instance powers are passed to PDNSim as user power
+  overrides for the duration of the analysis and cleared afterwards; a
+  `set_pdnsim_inst_power` override on the same instance and corner is
+  replaced by the thermal value (PDNSim has no getter to restore it).
 - During `global_placement -physics_driven` the cells are not legalized, so
   PDNSim usually cannot connect them to the rails: the IR-drop analysis is
   attempted once per placement run, warned about once (THM-0197) and the

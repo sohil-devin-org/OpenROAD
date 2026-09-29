@@ -245,6 +245,47 @@ PhysicsMapDataSource::PhysicsMapDataSource(Thermal* thermal,
       [this](const std::string& die) { die_ = std::stoi(die); });
 }
 
+// Dimensionless factors and temperature differences keep their magnitude
+// instead of the SI prefix scaling of the generic real-value legend.
+bool PhysicsMapDataSource::plainScale() const
+{
+  return kind_ == Kind::kDerate || kind_ == Kind::kEmRisk
+         || kind_ == Kind::kDelta;
+}
+
+void PhysicsMapDataSource::correctMapScale(web::HeatMapDataSource::Map& map)
+{
+  if (!plainScale()) {
+    web::RealValueHeatMapDataSource::correctMapScale(map);
+    return;
+  }
+  determineMinMax(map);
+  for (const auto& map_col : map) {
+    for (const auto& map_pt : map_col) {
+      map_pt->value = convertValueToPercent(map_pt->value);
+    }
+  }
+}
+
+std::string PhysicsMapDataSource::formatValue(double value, bool legend) const
+{
+  if (!plainScale()) {
+    return web::RealValueHeatMapDataSource::formatValue(value, legend);
+  }
+  const double real = convertPercentToValue(value);
+  char text[64];
+  if (kind_ == Kind::kDelta) {
+    std::snprintf(text, sizeof(text), "%+.2f", real);
+  } else {
+    std::snprintf(text, sizeof(text), "%.3f", real);
+  }
+  std::string result(text);
+  if (legend) {
+    result += kind_ == Kind::kDelta ? " C" : "x";
+  }
+  return result;
+}
+
 bool PhysicsMapDataSource::buildMap(MapSnapshot& map) const
 {
   switch (kind_) {

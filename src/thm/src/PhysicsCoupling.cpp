@@ -548,6 +548,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
   // power.  The net voltage is left to PDNSim (voltage-source file, SDC or
   // liberty PVT).
   sta::dbNetwork* network = sta_->getDbNetwork();
+  std::vector<odb::dbInst*> overridden;
   for (const auto& [inst, phys] : state) {
     double sta_power_w = 0.0;
     sta::Instance* sta_inst = network->dbToSta(inst);
@@ -560,7 +561,10 @@ bool IrDropCoupling::run(odb::dbBlock* block,
       continue;
     }
     psm_->setInstPower(inst, corner, static_cast<float>(delta_w));
+    overridden.push_back(inst);
   }
+  bool analyzed = true;
+  std::string failure;
   try {
     psm_->analyzePowerGrid(net,
                            corner,
@@ -572,6 +576,15 @@ bool IrDropCoupling::run(odb::dbBlock* block,
                            "",
                            config.ir_vsrc_file);
   } catch (const std::exception& e) {
+    analyzed = false;
+    failure = e.what();
+  }
+  // PDNSim keeps user powers across analyses; drop the thermal corrections
+  // so that later thermal or standalone PDNSim runs start from OpenSTA power.
+  for (odb::dbInst* inst : overridden) {
+    psm_->setInstPower(inst, corner, 0.0f);
+  }
+  if (!analyzed) {
     failed_ = true;
     if (!warned_failed_) {
       warned_failed_ = true;
@@ -580,7 +593,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
                     "IR-drop analysis of net {} failed ({}); the supply "
                     "voltage stays at the nominal {:.3f} V.",
                     net->getName(),
-                    e.what(),
+                    failure,
                     config.nominal_vdd_v);
     }
     return false;

@@ -178,20 +178,18 @@ bool TimingBase::executeTimingDriven(bool run_journal_restore,
       }
       auto net_slack = net_slack_opt.value();
       if (net_slack < slack_max) {
-        if (slack_max == slack_min) {
-          gNet->setTimingWeight(1.0);
-        } else {
-          // weight(min_slack) = net_weight_max_
-          // weight(max_slack) = 1
-          float weight = 1
-                         + (net_weight_max_ - 1) * (slack_max - net_slack)
-                               / (slack_max - slack_min);
-          if (physics_ != nullptr) {
-            weight *= physics_->netTimingWeightMultiplier(
-                gNet->getPbNet()->getDbNet());
-          }
-          gNet->setTimingWeight(weight);
+        // weight(min_slack) = net_weight_max_
+        // weight(max_slack) = 1
+        float weight = 1.0;
+        if (slack_max != slack_min) {
+          weight += (net_weight_max_ - 1) * (slack_max - net_slack)
+                    / (slack_max - slack_min);
         }
+        if (physics_ != nullptr) {
+          weight *= physics_->netTimingWeightMultiplier(
+              gNet->getPbNet()->getDbNet());
+        }
+        gNet->setTimingWeight(weight);
         weighted_net_count++;
       }
       debugPrint(log_,

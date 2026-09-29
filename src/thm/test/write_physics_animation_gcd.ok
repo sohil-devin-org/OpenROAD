@@ -8,10 +8,10 @@
 [INFO THM-0072] Applied physics derates to 0 instances.
 [INFO THM-0030] analyze_thermal: peak 25.00 C, avg 25.00 C, max gradient 0.00 C/mm, power 0.0000 W (leakage 0.0000 W), 1 loop iterations
 [INFO THM-0033]   WNS nominal 9.3375e-09 s, derated 9.3375e-09 s; TNS nominal 0.0000e+00 s, derated 0.0000e+00 s
-[INFO THM-0167] Subsampled 250 snapshots to 200 animation frames.
+[INFO THM-0167] Subsampled 252 snapshots to 200 animation frames.
 [INFO THM-0160] Wrote 200 cooldown animation frames (800x774, 25.0-25.0 C) to write_physics_animation_gcd_cooldown-tcl.gif.
 OK: write_physics_animation_gcd_cooldown-tcl.gif is a non-empty GIF89a file
-[INFO THM-0167] Subsampled 249 snapshots to 200 animation frames.
+[INFO THM-0167] Subsampled 251 snapshots to 200 animation frames.
 [INFO THM-0160] Wrote 200 transient animation frames (800x774, 25.0-60.0 C) to write_physics_animation_gcd_transient-tcl.gif.
 OK: write_physics_animation_gcd_transient-tcl.gif is a non-empty GIF89a file
 [INFO THM-0160] Wrote 1 electrothermal animation frames (800x774, 25.0-25.0 C) to write_physics_animation_gcd_electrothermal-tcl.gif.

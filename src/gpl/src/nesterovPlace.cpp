@@ -469,6 +469,10 @@ void NesterovPlace::runTimingDriven(int iter,
       nbc_->refreshDeviceNetWeights();
     } else {
       nbc_->rebuildDeviceState();
+      // repair_design may have added or removed instances; the per-gcell
+      // physics power is indexed by gcell storage position.
+      nbc_->updatePhysicsPower();
+      nbc_->updatePhysicsField();
     }
     // TODO remove fillers for TD iterations
     // for (auto& nesterov : nbVec_) {

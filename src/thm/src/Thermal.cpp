@@ -304,9 +304,21 @@ void Thermal::ensureGrid()
   odb::dbBlock* block = getBlock();
   const odb::Rect die = block->getDieArea();
   const auto stack = config_.buildStack();
+  const auto same_layer = [](const StackLayer& a, const StackLayer& b) {
+    return a.thickness_m == b.thickness_m
+           && a.conductivity_w_mk == b.conductivity_w_mk
+           && a.volumetric_heat_capacity_j_m3k
+                  == b.volumetric_heat_capacity_j_m3k
+           && a.is_active == b.is_active && a.die == b.die;
+  };
   const bool same = grid_.nx() == config_.grid_x && grid_.ny() == config_.grid_y
                     && grid_.dieRect() == die
-                    && grid_.stack().size() == stack.size();
+                    && grid_.dbuPerMicron() == block->getDbUnitsPerMicron()
+                    && std::equal(grid_.stack().begin(),
+                                  grid_.stack().end(),
+                                  stack.begin(),
+                                  stack.end(),
+                                  same_layer);
   if (!same) {
     grid_.reset(config_.grid_x,
                 config_.grid_y,
@@ -475,14 +487,19 @@ void Thermal::runTransient(const AnalyzeOptions& options,
   const int dies = config_.two_die ? 2 : 1;
   for (const ActivityPhase& phase : phases) {
     power_extractor_->setActivityScale(phase.activity_scale);
-    const int steps = std::max(1, static_cast<int>(phase.duration_s / dt));
+    // Whole steps of dt plus a shorter final step so that the phase lasts
+    // exactly duration_s.
+    const int steps
+        = std::max(1, static_cast<int>(std::ceil(phase.duration_s / dt)));
     for (int s = 0; s < steps; ++s) {
+      const double step_dt
+          = s + 1 < steps ? dt : std::max(phase.duration_s - s * dt, 0.0);
       power_extractor_->extract(
           getBlock(), *leakage_model_, nominal_temp_c_, inst_state_);
       buildPowerMaps();
-      solver_->stepTransient(power_maps_, config_, dt, grid_);
+      solver_->stepTransient(power_maps_, config_, step_dt, grid_);
       updateInstanceTemperatures();
-      time += dt;
+      time += step_dt;
       if (options.record) {
         PhysicsMetrics step_metrics = metrics;
         step_metrics.label = phase.name;
@@ -632,6 +649,7 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (options.include_ir_drop && config_.include_ir_drop) {
     runIrDrop(metrics);
   } else {
+    has_ir_map_ = false;
     for (auto& [inst, phys] : inst_state_) {
       phys.vdd_v = config_.nominal_vdd_v;
     }

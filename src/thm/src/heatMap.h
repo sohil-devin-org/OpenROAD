@@ -91,8 +91,11 @@ class PhysicsMapDataSource : public web::RealValueHeatMapDataSource
                        const std::string& name,
                        const std::string& short_name);
 
+  std::string formatValue(double value, bool legend) const override;
+
  protected:
   bool populateMap() override;
+  void correctMapScale(web::HeatMapDataSource::Map& map) override;
   void combineMapData(bool base_has_value,
                       double& base,
                       double new_data,
@@ -103,6 +106,7 @@ class PhysicsMapDataSource : public web::RealValueHeatMapDataSource
  private:
   std::vector<std::string> dieChoices() const;
   bool buildMap(MapSnapshot& map) const;
+  bool plainScale() const;
 
   Thermal* thermal_;
   Kind kind_;
