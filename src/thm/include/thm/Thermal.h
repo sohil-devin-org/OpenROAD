@@ -10,6 +10,7 @@
 
 #include "odb/PtrSetMap.h"
 #include "odb/db.h"
+#include "odb/dbBlockCallBackObj.h"
 #include "odb/geom.h"
 
 namespace sta {
@@ -115,10 +116,11 @@ class ThermalAnalyzer
   // the getters.
   void analyze(sta::Scene* corner, const ThermalOptions& options);
 
-  // Results belong to the block they were computed for.
+  // Results belong to the block they were computed for; the owner link is
+  // dropped by odb when that block is destroyed.
   bool hasResults() const
   {
-    return !grid_.empty() && results_block_ != nullptr
+    return !grid_.empty() && results_owner_.hasOwner()
            && getBlock() == results_block_;
   }
   const TemperatureGrid& getTemperatureGrid() const { return grid_; }
@@ -179,6 +181,7 @@ class ThermalAnalyzer
   ThermalStats stats_;
   sta::Scene* last_corner_ = nullptr;
   odb::dbBlock* results_block_ = nullptr;
+  odb::dbBlockCallBackObj results_owner_;
 
   std::shared_ptr<web::HeatMapSourceRegistration> heatmap_source_;
 };

@@ -121,5 +121,5 @@ Instances in hottest region (1 shown):
   _427_                                    sky130_fd_sc_hd__dfxtp_1       1.421e-05 W
 
 has results: 1
-has results after removing the design: 0
+has results after replacing the block: 0
 [WARNING THM-0013] No thermal results; run analyze_thermal first.

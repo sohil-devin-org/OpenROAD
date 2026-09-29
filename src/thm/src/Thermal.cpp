@@ -126,6 +126,7 @@ void ThermalAnalyzer::clearResults()
   stats_ = ThermalStats();
   last_corner_ = nullptr;
   results_block_ = nullptr;
+  results_owner_.removeOwner();
   if (heatmap_source_) {
     heatmap_source_->invalidateInstances();
   }
@@ -384,6 +385,7 @@ void ThermalAnalyzer::analyze(sta::Scene* corner, const ThermalOptions& options)
 
   grid_ = runHotSpot(hotspot, binary, tiles, bounds, options);
   results_block_ = block;
+  results_owner_.addOwner(block);
   last_corner_ = corner;
   stats_ = computeStats(grid_, inst_power, options.report_instances);
   if (heatmap_source_) {
@@ -611,6 +613,7 @@ void ThermalAnalyzer::readTemperatureGrid(const std::string& file)
   clearResults();
   grid_ = std::move(grid);
   results_block_ = block;
+  results_owner_.addOwner(block);
   last_corner_ = sta_->cmdScene();
   stats_ = computeStats(grid_, getInstancePower(last_corner_), 10);
   if (heatmap_source_) {

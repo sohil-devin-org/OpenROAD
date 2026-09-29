@@ -123,7 +123,10 @@ analyze_thermal -hotspot_binary $fake_hotspot -work_dir $work_dir \
   -report_instances 1
 puts "has results: [thm::has_thermal_results]"
 
-# Results belong to the analyzed block: removing the design drops them.
-odb::dbChip_destroy [[ord::get_db] getChip]
-puts "has results after removing the design: [thm::has_thermal_results]"
+# Results belong to the analyzed block: replacing the block (which may reuse
+# the freed block slot) drops them.
+set chip [[ord::get_db] getChip]
+odb::dbBlock_destroy [$chip getBlock]
+odb::dbBlock_create $chip replacement
+puts "has results after replacing the block: [thm::has_thermal_results]"
 report_thermal
