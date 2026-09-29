@@ -158,31 +158,58 @@ void PDNSim::writeSpiceNetwork(odb::dbNet* net,
   solver->writeSpiceFile(source_type, spice_file, corner, voltage_source_file);
 }
 
+odb::dbBlock* PDNSim::getBlock() const
+{
+  return db_->getChip() ? db_->getChip()->getBlock() : nullptr;
+}
+
 bool PDNSim::analyzeThermal(const ThermalSettings& settings)
 {
-  odb::dbBlock* block = db_->getChip() ? db_->getChip()->getBlock() : nullptr;
+  odb::dbBlock* block = getBlock();
   if (block == nullptr) {
     logger_->error(utl::PSM, 200, "No design loaded.");
   }
-  if (thermal_heatmap_source_) {
-    thermal_heatmap_source_->invalidateInstances();
-  }
+  clearThermal();
   const bool ok = thermal_->analyze(block, settings, user_powers_);
+  if (ok) {
+    // Results refer to the current placement; drop them when it changes.
+    thermal_block_ = block;
+    addOwner(block);
+  }
   if (thermal_heatmap_source_) {
     thermal_heatmap_source_->invalidateInstances();
   }
   return ok;
 }
 
+void PDNSim::clearThermal()
+{
+  if (thermal_block_ == nullptr) {
+    return;
+  }
+  thermal_block_ = nullptr;
+  thermal_->clear();
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+}
+
 const ThermalGrid& PDNSim::getThermalGrid() const
 {
+  static const ThermalGrid empty_grid;
+  if (thermal_block_ == nullptr || thermal_block_ != getBlock()) {
+    return empty_grid;
+  }
   return thermal_->getGrid();
 }
 
 const ThermalHotRegion* PDNSim::getThermalHotRegion() const
 {
   const auto& region = thermal_->getHotRegion();
-  return region ? &region.value() : nullptr;
+  if (!region || thermal_block_ == nullptr || thermal_block_ != getBlock()) {
+    return nullptr;
+  }
+  return &region.value();
 }
 
 void PDNSim::setThermalColorRange(
@@ -267,9 +294,30 @@ void PDNSim::clearSolvers()
   solvers_.clear();
 }
 
+void PDNSim::inDbInstCreate(odb::dbInst*)
+{
+  clearThermal();
+}
+
+void PDNSim::inDbInstDestroy(odb::dbInst*)
+{
+  clearThermal();
+}
+
+void PDNSim::inDbInstSwapMasterAfter(odb::dbInst*)
+{
+  clearThermal();
+}
+
 void PDNSim::inDbPostMoveInst(odb::dbInst*)
 {
   clearSolvers();
+  clearThermal();
+}
+
+void PDNSim::inDbBlockSetDieArea(odb::dbBlock*)
+{
+  clearThermal();
 }
 
 void PDNSim::inDbNetDestroy(odb::dbNet*)

@@ -19,7 +19,7 @@ Min temperature    : 47.00 C
 Hottest region     : (0.000, 0.000) - (43.420, 21.710) um
 Region tiles       : 2
 Region average     : 54.75 C
-Region instances   : 22
+Region instances   : 34
 Instance                                 Master                            Power (W)
 dpath.a_lt_b$in1\[2\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.3340e-05
 dpath.a_lt_b$in1\[1\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2349e-05
@@ -35,5 +35,7 @@ lower right 49.50
 upper left 47.00
 upper right 48.50
 report file header: Instance	Master	Power (W)
-report file instances: 22
+report file instances: 34
 report file first: dpath.a_lt_b$in1\[2\]$_DFFE_PP_	sky130_fd_sc_hd__dfxtp_2	1.3340e-05
+[ERROR PSM-0227] No thermal result available. Run analyze_thermal first.
+after move: PSM-0227

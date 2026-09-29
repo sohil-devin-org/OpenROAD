@@ -112,7 +112,11 @@ class PDNSim : public odb::dbBlockCallBackObj
   void setGeneratedSourceSettings(const GeneratedSourceSettings& settings);
 
   // from dbBlockCallBackObj
+  void inDbInstCreate(odb::dbInst*) override;
+  void inDbInstDestroy(odb::dbInst*) override;
+  void inDbInstSwapMasterAfter(odb::dbInst*) override;
   void inDbPostMoveInst(odb::dbInst*) override;
+  void inDbBlockSetDieArea(odb::dbBlock*) override;
   void inDbNetDestroy(odb::dbNet*) override;
   void inDbBTermPostConnect(odb::dbBTerm*) override;
   void inDbBTermPostDisConnect(odb::dbBTerm*, odb::dbNet*) override;
@@ -149,6 +153,8 @@ class PDNSim : public odb::dbBlockCallBackObj
   odb::dbNet* findPowerNet(const char* net_name);
 
   IRSolver* getIRSolver(odb::dbNet* net, bool floorplanning);
+  odb::dbBlock* getBlock() const;
+  void clearThermal();
 
   odb::dbDatabase* db_ = nullptr;
   sta::dbSta* sta_ = nullptr;
@@ -159,6 +165,7 @@ class PDNSim : public odb::dbBlockCallBackObj
   web::HeatMapSourceHandle heatmap_source_;
   web::HeatMapSourceHandle thermal_heatmap_source_;
   std::unique_ptr<ThermalAnalyzer> thermal_;
+  odb::dbBlock* thermal_block_ = nullptr;
 
   bool debug_gui_enabled_ = false;
 

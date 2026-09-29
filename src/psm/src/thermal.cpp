@@ -366,6 +366,8 @@ ThermalAnalyzer::InstancePowers ThermalAnalyzer::collectInstancePower(
                    "Instance {} ({}) has no Liberty power.",
                    inst->getName(),
                    inst->getMaster()->getName());
+        // Kept at 0 W so the hottest-region report lists it.
+        powers.emplace_back(inst, 0.0f);
       }
       continue;
     }
@@ -600,7 +602,8 @@ std::string ThermalAnalyzer::runHotSpotFlow(odb::dbBlock* block,
   const std::string ptrace = "design.ptrace";
   const std::string steady = "design.steady";
   const std::string grid_steady = "design.grid.steady";
-  const std::string log = (dir / "hotspot.log").string();
+  const std::string log
+      = (std::filesystem::absolute(dir) / "hotspot.log").string();
 
   // Tiles are equal to or coarser than the grid; both are powers of 2 so
   // every tile covers a whole number of grid cells.

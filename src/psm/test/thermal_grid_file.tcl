@@ -28,3 +28,14 @@ close $stream
 puts "report file header: [lindex $lines 0]"
 puts "report file instances: [expr { [llength $lines] - 1 }]"
 puts "report file first: [lindex $lines 1]"
+
+# Moving an instance invalidates the thermal result.
+foreach inst [[ord::get_db_block] getInsts] {
+  if { [$inst getPlacementStatus] == "PLACED" } {
+    break
+  }
+}
+set loc [$inst getLocation]
+$inst setLocation [expr { [lindex $loc 0] + 460 }] [lindex $loc 1]
+catch { psm::thermal_peak } msg
+puts "after move: $msg"

@@ -19,7 +19,7 @@ Min temperature    : 45.00 C
 Hottest region     : (0.000, 0.000) - (32.565, 21.710) um
 Region tiles       : 4
 Region average     : 54.88 C
-Region instances   : 4
+Region instances   : 8
 Instance                                 Master                            Power (W)
 dpath.a_lt_b$in0\[0\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2285e-05
 output44                                 sky130_fd_sc_hd__clkbuf_1        1.1985e-06
@@ -134,7 +134,7 @@ Min temperature    : 45.00 C
 Hottest region     : (0.000, 0.000) - (21.710, 21.710) um
 Region tiles       : 1
 Region average     : 49.50 C
-Region instances   : 5
+Region instances   : 9
 Instance                                 Master                            Power (W)
 dpath.a_lt_b$in1\[1\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.2349e-05
 ####################################
