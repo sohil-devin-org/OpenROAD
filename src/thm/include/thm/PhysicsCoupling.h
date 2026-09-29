@@ -229,8 +229,13 @@ class ClockSkewAnalyzer
 {
  public:
   ClockSkewAnalyzer(sta::dbSta* sta, utl::Logger* logger);
-  // Returns worst |skew_derated - skew_nominal| across clocks.
+  // Returns skew_derated - skew_nominal of the worst (largest magnitude)
+  // register-to-register clock skew across clocks; the derates are applied
+  // / cleared through `derates` and the applier state is restored.
   double skewDeltaS(DerateApplier& derates, const InstancePhysicsMap& state);
+  // Worst clock skew (s) of the current STA state (with whatever derates
+  // are applied right now); 0 without clocks or registers.
+  double worstSkewS();
 
  private:
   sta::dbSta* sta_;

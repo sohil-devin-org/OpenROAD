@@ -12,6 +12,7 @@ TESTS = [
     "physics_derating_gcd",
     "thermal_config_errors",
     "thermal_map_gcd",
+    "characterize_libraries_nangate45",
 ]
 
 filegroup(
@@ -69,6 +70,19 @@ cc_test(
     ],
     deps = [
         "//src/odb/src/db",
+        "//src/thm:thm_core",
+        "//src/utl",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "leakage_model_test",
+    srcs = [
+        "cpp/LeakageModelTest.cpp",
+    ],
+    deps = [
         "//src/thm:thm_core",
         "//src/utl",
         "@googletest//:gtest",

@@ -153,6 +153,21 @@ void Thermal::setConfigValue(const std::string& key, const std::string& value)
       {"include_ir_drop", boolean(c.include_ir_drop)},
       {"power_net", str(c.ir_power_net)},
       {"vsrc", str(c.ir_vsrc_file)},
+      {"leakage_beta_per_c",
+       [this, &c](const std::string& v) {
+         c.leakage_beta_per_c = std::stod(v);
+         leakage_model_->setDefaultBetaPerC(c.leakage_beta_per_c);
+       }},
+      {"delay_tempco_per_c",
+       [this, &c](const std::string& v) {
+         c.delay_tempco_per_c = std::stod(v);
+         derate_model_->setDefaultTempcoPerC(c.delay_tempco_per_c);
+       }},
+      {"delay_vcoef_per_v",
+       [this, &c](const std::string& v) {
+         c.delay_vcoef_per_v = std::stod(v);
+         derate_model_->setDefaultVcoefPerV(c.delay_vcoef_per_v);
+       }},
   };
   auto it = setters.find(key);
   if (it == setters.end()) {
@@ -528,12 +543,40 @@ void Thermal::runTiming(PhysicsMetrics& metrics)
   }
   derate_applier_->timingSummary(metrics.wns_nominal_s, metrics.tns_nominal_s);
   derate_applier_->instanceSlacks(inst_state_, /*derated=*/false);
+  ClockSkewAnalyzer skew_analyzer(sta_, logger_);
+  const double skew_nominal_s = skew_analyzer.worstSkewS();
   // Derated timing.
   derate_applier_->apply(inst_state_);
   derate_applier_->timingSummary(metrics.wns_derated_s, metrics.tns_derated_s);
   derate_applier_->instanceSlacks(inst_state_, /*derated=*/true);
+  metrics.clock_skew_delta_s = skew_analyzer.worstSkewS() - skew_nominal_s;
   if (!derating_enabled_) {
     derate_applier_->clear();
+  }
+  // Electromigration lifetime of the supply grid relative to the design at
+  // its reference condition (leakage at the STA nominal temperature, no
+  // self-heating, no IR drop).  The current density proxy is the total
+  // supply current I = P / V (Black's equation uses J ~ I for a fixed grid):
+  // actual  I   = P_total / (V_nom - worst IR drop)
+  // reference I = (P_dynamic + P_leakage(T_nom)) / V_nom
+  // evaluated at the peak die temperature versus the EM reference
+  // temperature (ThermalConfig::em).
+  double power_ref_w = 0.0;
+  double power_w = 0.0;
+  for (const auto& [inst, phys] : inst_state_) {
+    power_w += phys.dynamic_power_w + phys.leakage_power_w;
+    power_ref_w += phys.dynamic_power_w
+                   + leakage_model_->leakageAt(inst->getMaster()->getName(),
+                                               phys.leakage_power_w,
+                                               phys.temperature_c,
+                                               nominal_temp_c_);
+  }
+  const double v_nom = config_.nominal_vdd_v;
+  const double v_min = std::max(v_nom - metrics.worst_ir_drop_v, 1e-3 * v_nom);
+  if (power_ref_w > 0.0 && v_nom > 0.0) {
+    const ElectromigrationModel em(config_.em);
+    metrics.em_lifetime_factor = em.relativeLifetime(
+        power_w / v_min, metrics.peakTemp(), power_ref_w / v_nom);
   }
 }
 
