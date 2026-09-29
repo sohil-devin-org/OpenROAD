@@ -12,6 +12,7 @@ TESTS = [
     "physics_derating_gcd",
     "thermal_config_errors",
     "thermal_map_gcd",
+    "physics_flow_gcd",
     "characterize_libraries_nangate45",
 ]
 
