@@ -44,6 +44,9 @@ names=$(head -n 1 "$ptrace" | wc -w)
 [ "$blocks" -eq "$names" ] \
   || fail "$blocks floorplan blocks but $names power trace columns"
 
+empty=$(grep -v '^#' "$flp" | awk 'NF && ($2 <= 0 || $3 <= 0)' | wc -l)
+[ "$empty" -eq 0 ] || fail "$empty floorplan blocks have no area"
+
 if [ -n "$FAKE_HOTSPOT_NO_OUTPUT" ]; then
   echo "fake hotspot: no output requested by FAKE_HOTSPOT_NO_OUTPUT"
   exit 0

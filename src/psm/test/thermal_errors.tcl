@@ -85,6 +85,31 @@ unset ::env(FAKE_HOTSPOT_NO_OUTPUT)
 analyze_thermal -grid_file thermal_grid_file.grid -grid {4 4} -max_instances 1
 check_error { psm::thermal_temperature_at 1000 1000 }
 
+# A die narrower than the floorplan tile limit still gets positive-size tiles.
+set block [ord::get_db_block]
+set tiny_die [odb::Rect]
+$tiny_die init 0 0 20 20
+$block setDieArea $tiny_die
+analyze_thermal -hotspot $fake -work_dir $work_dir -grid {64 64} -max_instances 1
+set flp [open [file join $work_dir design.flp] r]
+set blocks 0
+set empty 0
+foreach line [split [read $flp] "\n"] {
+  if { $line == "" } {
+    continue
+  }
+  if { [string index $line 0] == "#" } {
+    puts $line
+    continue
+  }
+  incr blocks
+  if { [lindex $line 1] <= 0 || [lindex $line 2] <= 0 } {
+    incr empty
+  }
+}
+close $flp
+puts "floorplan blocks: $blocks, without area: $empty"
+
 # No placement.
 foreach inst [[ord::get_db_block] getInsts] {
   $inst setPlacementStatus NONE

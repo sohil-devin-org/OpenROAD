@@ -83,5 +83,24 @@ dpath.a_lt_b$in1\[2\]$_DFFE_PP_          sky130_fd_sc_hd__dfxtp_2         1.3340
 ####################################
 [ERROR PSM-0228] (1000, 1000) um is outside the thermal grid.
 caught: PSM-0228
+[WARNING PSM-0213] 96 placed instances have no Liberty power and no set_pdnsim_inst_power value; they dissipate no power.
+[INFO PSM-0216] Binned 1.1379e-03 W of instance power into 1.1379e-03 W over 16 x 16 HotSpot tiles.
+########## Thermal report ##########
+Design             : gcd
+Corner             : default
+Grid               : 64 x 64
+Ambient            : 45.00 C
+Total power        : 1.1379e-03 W
+Peak temperature   : 139.50 C
+Average temperature: 92.25 C
+Min temperature    : 45.00 C
+Hottest region     : (0.000, 0.000) - (0.005, 0.003) um
+Region tiles       : 100
+Region average     : 133.57 C
+Region instances   : 0
+####################################
+# OpenROAD thermal floorplan of gcd: 16 x 16 tiles
+# <name>	<width>	<height>	<left-x>	<bottom-y> (meters)
+floorplan blocks: 256, without area: 0
 [ERROR PSM-0208] Design gcd has no placed instances. Run analyze_thermal after placement.
 caught: PSM-0208

@@ -193,7 +193,8 @@ The flow is:
    macros) without Liberty power and without an override dissipate no power
    and are counted in a warning. Unplaced instances are ignored.
 1. The die area is split into a regular floorplan of rectangular tiles (the
-   same as the thermal grid, capped at 32 x 32 tiles). Each instance's power is
+   same as the thermal grid, capped at 32 x 32 tiles and at one tile per
+   database unit). Each instance's power is
    distributed over the tiles it overlaps in proportion to the overlap area,
    so the total power is conserved. The floorplan (`design.flp`, meters) and
    power trace (`design.ptrace`, watts) are written to the work directory.
@@ -230,7 +231,7 @@ analyze_thermal
 | `-hotspot_config` | HotSpot configuration file passed with `-c`. The grid size and ambient/initial temperature are still set from `-grid` and `-ambient`. Defaults to a generated `hotspot.config` (see below). |
 | `-grid_file` | Read an existing HotSpot `-grid_steady_file` for a `-grid` sized grid over the die instead of running HotSpot. No HotSpot inputs are generated. |
 | `-work_dir` | Directory (created if needed) for the generated HotSpot inputs, outputs and `hotspot.log`. Defaults to a temporary directory that is removed after the run. |
-| `-grid` | HotSpot grid rows and columns (powers of 2). The default is `64 64`. |
+| `-grid` | HotSpot grid rows and columns (powers of 2, at most 1024 each). The default is `64 64`. |
 | `-ambient` | Ambient temperature in degrees Celsius. The default is 45. |
 | `-corner` | Corner used for power. Defaults to the command corner. |
 | `-max_instances` | Number of instances in the hottest region to report. The default is 10. |

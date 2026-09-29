@@ -59,6 +59,17 @@ bool isValidGridSide(const int value)
   return value > 0 && value <= kMaxGridSide && (value & (value - 1)) == 0;
 }
 
+// Largest power of 2 tile count, no larger than grid_side or kMaxTilesPerSide,
+// that gives every tile a positive extent.
+int floorplanTiles(const int grid_side, const int die_side_dbu)
+{
+  int tiles = std::min(grid_side, kMaxTilesPerSide);
+  while (tiles > 1 && tiles > die_side_dbu) {
+    tiles /= 2;
+  }
+  return tiles;
+}
+
 double dbuToMeters(odb::dbBlock* block, const int64_t dbu)
 {
   return block->dbuToMicrons(dbu) * 1e-6;
@@ -593,8 +604,9 @@ std::string ThermalAnalyzer::runHotSpotFlow(odb::dbBlock* block,
 
   // Tiles are equal to or coarser than the grid; both are powers of 2 so
   // every tile covers a whole number of grid cells.
-  const int tile_rows = std::min(settings.grid_rows, kMaxTilesPerSide);
-  const int tile_cols = std::min(settings.grid_cols, kMaxTilesPerSide);
+  const odb::Rect die = block->getDieArea();
+  const int tile_rows = floorplanTiles(settings.grid_rows, die.dy());
+  const int tile_cols = floorplanTiles(settings.grid_cols, die.dx());
   writeFloorplan(block,
                  powers,
                  tile_rows,
