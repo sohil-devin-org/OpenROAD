@@ -359,7 +359,8 @@ void HeatMapSetup::addBooleanOption(
       check_box, &QCheckBox::stateChanged, [this, option](int value) {
         option.setter(value == Qt::Checked);
         destroyMap();
-        source_.redraw();
+        source_.ensureMap();
+        emit changed();
       });
 }
 
@@ -400,7 +401,8 @@ void HeatMapSetup::addDoubleOption(
                    [this, option](double value) {
                      option.setter(value);
                      destroyMap();
-                     source_.redraw();
+                     source_.ensureMap();
+                     emit changed();
                    });
 }
 
