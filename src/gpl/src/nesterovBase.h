@@ -61,6 +61,8 @@ class RegionDensityField;  // gpu/regionDensityField.h (GPU-only)
 class WirelengthGradientBackend;  // wirelengthGradientBackend.h
 class DensityGradientBackend;     // densityGradientBackend.h
 class NesterovDeviceContext;      // gpu/nesterovDeviceContext.h
+class PhysicsField;               // physicsField.h
+class PhysicsModel;               // gpl/PhysicsModel.h
 enum class SlpSlot : int;         // gpu/nesterovDeviceContext.h
 enum class SumGradSlot : int;     // gpu/nesterovDeviceContext.h
 
@@ -861,6 +863,15 @@ struct NesterovPlaceVars
   const bool routability_driven_mode;
   const bool disableRevertIfDiverge;
 
+  // Physics-driven placement (see PlaceOptions).
+  const bool physicsDrivenMode;
+  const float physicsWeight;
+  const int physicsCheckpointInterval;
+  const int physicsFieldInterval;
+  const float physicsStartOverflow;
+  const int physicsGridX;
+  const int physicsGridY;
+
   bool debug = false;
   int debug_pause_iterations = 10;
   int debug_update_iterations = 10;
@@ -970,6 +981,23 @@ class NesterovBaseCommon
   // Number of threads of execution
   size_t getNumThreads() { return num_threads_; }
 
+  // Physics-driven placement: thermal spreading potential shared by all
+  // regions. initPhysics is only called when -physics_driven is set; the
+  // default placement flow never touches the field.
+  void initPhysics(PhysicsModel* physics, const NesterovPlaceVars& npVars);
+  bool hasPhysics() const { return physics_field_ != nullptr; }
+  PhysicsModel* getPhysicsModel() const { return physics_model_; }
+  PhysicsField* getPhysicsField() const { return physics_field_.get(); }
+  // Pull per-instance power from the physics model (after a checkpoint).
+  void updatePhysicsPower();
+  // Re-deposit the cell power on the current density coordinates and
+  // re-solve the potential.
+  void updatePhysicsField();
+  // Force on a cell: its power (normalized to the mean cell power) times
+  // the potential gradient at its density center; zero for fillers/IOs.
+  FloatPoint getPhysicsGradient(const GCell* gCell) const;
+  float getCellPowerW(const GCell* gCell) const;
+
   GCell* getGCellByIndex(size_t i);
 
   void setCbk(nesterovDbCbk* cbk) { db_cbk_ = cbk; }
@@ -1053,6 +1081,13 @@ class NesterovBaseCommon
   std::deque<Pin> pb_pins_stor_;
 
   int num_threads_;
+
+  PhysicsModel* physics_model_ = nullptr;
+  std::unique_ptr<PhysicsField> physics_field_;
+  // Watts per gCellStor_ index (0 for fillers / IO pins).
+  std::vector<float> cell_power_w_;
+  float mean_cell_power_w_ = 0;
+  int physics_field_sweeps_ = 0;
   // Device-resident state for GPU backends (pin coords + per-net/per-pin
   // buffers; HPWL, WL grad, density gather all read from this).
   // Constructed in the ctor body after gCellStor_ / gPinStor_ / gNetStor_
@@ -1096,6 +1131,12 @@ class NesterovBase
   float getSumOverflowUnscaled() const { return sum_overflow_unscaled_; }
   float getBaseWireLengthCoef() const { return baseWireLengthCoef_; }
   float getDensityPenalty() const { return densityPenalty_; }
+  float getPhysicsPenalty() const { return physicsPenalty_; }
+  float getPhysicsGradSum() const { return physicsGradSum_; }
+  // The physics force is switched on by NesterovPlace once the overflow
+  // drops below physicsStartOverflow.
+  void setPhysicsActive(bool active) { physics_active_ = active; }
+  bool isPhysicsActive() const { return physics_active_; }
 
   float getWireLengthGradSum() const { return wireLengthGradSum_; }
   float getDensityGradSum() const { return densityGradSum_; }
@@ -1485,6 +1526,12 @@ class NesterovBase
 
   // opt_phi_cof
   float densityPenalty_ = 0;
+
+  // Physics-driven placement: per-cell spreading force and its scale.
+  std::vector<FloatPoint> physicsGrads_;
+  float physicsPenalty_ = 0;
+  float physicsGradSum_ = 0;
+  bool physics_active_ = false;
 
   // base_wcof
   float baseWireLengthCoef_ = 0;

@@ -67,6 +67,10 @@ Timing-driven arguments
 - They begin with `-timing_driven`.
 - `-timing_driven_net_reweight_overflow`, `-timing_driven_net_weight_max`, `-timing_driven_nets_percentage`, `keep_resize_below_overflow`, `-timing_driven_repair_timing`, `-timing_driven_repair_tns_end_percent`
 
+Physics-driven arguments
+- They begin with `-physics`.
+- `-physics_driven`, `-physics_weight`, `-physics_checkpoint_interval`, `-physics_field_interval`, `-physics_start_overflow`, `-physics_grid`
+
 ```tcl
 global_placement
     [-skip_initial_place]\
@@ -108,6 +112,12 @@ global_placement
     [-enable_routing_congestion]\
     [-virtual_cts]\
     [-virtual_cts_max_skew_fraction virtual_cts_max_skew_fraction]\
+    [-physics_driven]\
+    [-physics_weight physics_weight]\
+    [-physics_checkpoint_interval physics_checkpoint_interval]\
+    [-physics_field_interval physics_field_interval]\
+    [-physics_start_overflow physics_start_overflow]\
+    [-physics_grid physics_grid]\
     [-random_seed random_seed]\
     [-perturb_dist perturb_dist]
 ```
@@ -173,6 +183,33 @@ global_placement
 | `-keep_resize_below_overflow` | When the overflow is below the value, timing-driven iterations will retain (non-virtual) the resizer changes instead of reverting them (virtual). The default value is `1.0`, making all timing-driven iterations non-virtual. Allowed values are floats `[0, 1]`. |
 | `-timing_driven_repair_timing` | **Experimental.** Enable a conservative `repair_setup` pass during last timing-driven iteration. The intent is to apply minimal buffering and gate sizing so that the placement better correlates with global routing timing. Only the worst setup violators are targeted. Disruptive operations (pin swap, gate cloning, VT swap) are suppressed to avoid topology changes during placement. Not ready for production use. |
 | `-timing_driven_repair_tns_end_percent` | **Experimental.** When `-timing_driven_repair_timing` is enabled, controls the percentage of violating endpoints targeted by the `repair_setup` call. The default value is `1.0` and the allowed values are floats `[0, 100]`. |
+
+#### Physics-Driven Arguments
+
+`-physics_driven` is opt-in: without the flag the placer behaves exactly as
+before. With it, the placer periodically writes the current placement to the
+database and runs the coupled physics loop of the `thm` module
+(power extraction from OpenSTA -> thermal solve -> temperature-dependent
+leakage -> IR drop -> timing derates), records every checkpoint in the
+physics history (`report_physics`, `write_physics_history`), and adds a
+thermal spreading force to the Nesterov objective. The force is the gradient
+of a screened-Poisson potential \(\lambda^2 \nabla^2 \phi - \phi = -q\) of
+the power density \(q\) deposited by the cells, with the screening length
+\(\lambda\) taken from the thermal stack (`set_thermal_config`); each cell
+is pushed down the potential proportionally to its power, so hot cells are
+spread apart while low-power cells are unaffected. With `-timing_driven`,
+the timing derates stay applied during placement and nets touching the
+hottest / most IR-starved instances get a larger reweighting multiplier.
+The physics force runs on the CPU gradient path only.
+
+| Switch Name | Description |
+| ----- | ----- |
+| `-physics_driven` | Enable physics-driven placement. Requires a liberty library (for power) and, for IR drop, a power grid; use `set_thermal_config` to tune the thermal model. |
+| `-physics_weight` | Magnitude of the thermal spreading force relative to the wirelength gradient (L1 norm). The default value is `0.3`, and the allowed values are positive floats. |
+| `-physics_checkpoint_interval` | Nesterov iterations between full physics checkpoints. The default value is `50`, and the allowed values are positive integers. |
+| `-physics_field_interval` | Nesterov iterations between refreshes of the spreading potential from the current cell positions. The default value is `5`, and the allowed values are positive integers. |
+| `-physics_start_overflow` | The spreading force is applied once the overflow drops below this value. The default value is `0.9`, and the allowed values are floats `[0, 1]`. |
+| `-physics_grid` | Resolution of the spreading potential grid over the core (`N` x `N`). The default value is `64`, and the allowed values are positive integers. |
 
 ### Cluster Flops
 

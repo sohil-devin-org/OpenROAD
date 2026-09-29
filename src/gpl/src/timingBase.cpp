@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "gpl/PhysicsModel.h"
 #include "grt/GlobalRouter.h"
 #include "nesterovBase.h"
 #include "placerBase.h"
@@ -182,9 +183,13 @@ bool TimingBase::executeTimingDriven(bool run_journal_restore,
         } else {
           // weight(min_slack) = net_weight_max_
           // weight(max_slack) = 1
-          const float weight = 1
-                               + (net_weight_max_ - 1) * (slack_max - net_slack)
-                                     / (slack_max - slack_min);
+          float weight = 1
+                         + (net_weight_max_ - 1) * (slack_max - net_slack)
+                               / (slack_max - slack_min);
+          if (physics_ != nullptr) {
+            weight *= physics_->netTimingWeightMultiplier(
+                gNet->getPbNet()->getDbNet());
+          }
           gNet->setTimingWeight(weight);
         }
         weighted_net_count++;

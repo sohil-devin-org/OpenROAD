@@ -38,6 +38,7 @@ target_include_directories(thm_core
 
 add_library(thm_lib
   src/PhysicsCoupling.cpp
+  src/PlacementPhysics.cpp
   src/Thermal.cpp
   src/animation.cpp
   src/heatMap.cpp
@@ -49,6 +50,7 @@ target_link_libraries(thm_lib
     odb
     dbSta
     psm
+    gpl_lib
   PRIVATE
     utl_lib
     gui_core

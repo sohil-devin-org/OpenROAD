@@ -17,6 +17,8 @@ or_integration_tests(
     density01
     diverge01
     error01
+    physics-errors
+    physics01
     incremental01
     nograd01
     simple01

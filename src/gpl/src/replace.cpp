@@ -337,6 +337,18 @@ bool Replace::initNesterovPlace(const PlaceOptions& options,
     tb_->setRepairTnsEndPercent(options.timingDrivenRepairTnsEndPercent);
   }
 
+  if (options.physicsDrivenMode) {
+    if (physics_ == nullptr) {
+      log_->error(GPL,
+                  195,
+                  "-physics_driven requires the thermal/physics engine "
+                  "(thm) to be available.");
+    }
+    tb_->setPhysicsModel(physics_);
+  } else {
+    tb_->setPhysicsModel(nullptr);
+  }
+
   if (!cb_ && options.virtualCtsMode) {
     float skew_fraction = options.virtualCtsMaxSkewFraction;
     // Clamp to a sane range; a negative value yields negative insertion
@@ -374,6 +386,10 @@ bool Replace::initNesterovPlace(const PlaceOptions& options,
       nb->setNpVars(&npVars);
     }
 
+    if (options.physicsDrivenMode) {
+      nbc_->initPhysics(physics_, npVars);
+    }
+
     np_ = std::make_unique<NesterovPlace>(npVars,
                                           pbc_,
                                           nbc_,
@@ -386,6 +402,7 @@ bool Replace::initNesterovPlace(const PlaceOptions& options,
                                           log_);
   }
   // Ensure these get set even if np_ already exists.
+  np_->setPhysicsModel(options.physicsDrivenMode ? physics_ : nullptr);
   np_->setTargetOverflow(options.overflow);
   np_->setMaxIters(options.nesterovPlaceMaxIter);
   return true;
@@ -531,6 +548,17 @@ void PlaceOptions::validate(utl::Logger* logger)
   val.check_non_negative("reference_hpwl", referenceHpwl, 409);
 
   val.check_non_negative("initial_place_max_iter", initialPlaceMaxIter, 410);
+
+  if (physicsDrivenMode) {
+    val.check_positive("physics_weight", physicsWeight, 190);
+    val.check_positive(
+        "physics_checkpoint_interval", physicsCheckpointInterval, 191);
+    val.check_positive("physics_field_interval", physicsFieldInterval, 192);
+    val.check_range(
+        "physics_start_overflow", physicsStartOverflow, 0.0f, 1.0f, 193);
+    val.check_positive("physics_grid", physicsGridX, 194);
+    val.check_positive("physics_grid", physicsGridY, 194);
+  }
   val.check_positive("initial_place_max_fanout", initialPlaceMaxFanout, 411);
 
   val.check_positive(
