@@ -209,7 +209,7 @@ The physics force runs on the CPU gradient path only.
 | `-physics_checkpoint_interval` | Nesterov iterations between full physics checkpoints. The default value is `50`, and the allowed values are positive integers. |
 | `-physics_field_interval` | Nesterov iterations between refreshes of the spreading potential from the current cell positions. The default value is `5`, and the allowed values are positive integers. |
 | `-physics_start_overflow` | The spreading force is applied once the overflow drops below this value. The default value is `0.9`, and the allowed values are floats `[0, 1]`. |
-| `-physics_grid` | Resolution of the spreading potential grid over the core (`N` x `N`). The default value is `64`, and the allowed values are positive integers. |
+| `-physics_grid` | Resolution of the spreading potential grid over the core: a single `N` (`N` x `N`) or `{nx ny}`. The default value is `64`, and the allowed values are positive integers. |
 
 ### Cluster Flops
 

@@ -220,6 +220,7 @@ class Thermal
   odb::dbBlock* getBlock() const;
   void ensureGrid();
   void buildPowerMaps();
+  void addSecondDiePower();
   void updateInstanceTemperatures();
   // One electrothermal fixed-point loop; returns iterations and sets the
   // convergence flags in metrics.

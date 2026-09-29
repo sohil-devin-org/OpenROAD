@@ -641,10 +641,17 @@ python3 etc/find_messages.py -d src/thm > src/thm/messages.txt
   subsampled evenly to keep the animation small.
 - The thermal clock-skew delta is the difference of the worst STA skew with
   and without derates, not a clock-tree-aware thermal skew model.
-- The second die of a two-die stack is modeled with a uniform or mirrored
-  power map, not a placed design.
+- The second die of a two-die stack is modeled with a uniform, mirrored
+  (`second_die_power_source mirror`) or file-based (`file` +
+  `second_die_power_file`, nx*ny row-major per-tile watts) power map, not a
+  placed design; a positive `second_die_power` rescales the map total.
+- PDNSim adds the thermal power corrections to its node currents (so the IR
+  solution sees the thermal power) but its own "Total power" report counts
+  only the correction for overridden instances; `thm` never reads that
+  total.
 - Transient analysis replays sustained activity phases; it does not replay
-  raw activity traces.
+  raw activity traces.  A phase's `activity_file` is loaded at the phase
+  boundary and the global `activity_file` is restored afterwards.
 
 ## License
 

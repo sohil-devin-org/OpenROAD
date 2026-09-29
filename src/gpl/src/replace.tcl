@@ -135,11 +135,23 @@ proc global_placement { args } {
         utl::error GPL 200 "-physics_weight '$keys(-physics_weight)' must be greater than 0."
       }
     }
-    foreach key {-physics_checkpoint_interval -physics_field_interval -physics_grid} {
+    foreach key {-physics_checkpoint_interval -physics_field_interval} {
       if { [info exists keys($key)] } {
         sta::check_positive_integer $key $keys($key)
         if { $keys($key) <= 0 } {
           utl::error GPL 201 "$key '$keys($key)' must be greater than 0."
+        }
+      }
+    }
+    if { [info exists keys(-physics_grid)] } {
+      set grid $keys(-physics_grid)
+      if { [llength $grid] < 1 || [llength $grid] > 2 } {
+        utl::error GPL 203 "-physics_grid '$grid' must be one size or {nx ny}."
+      }
+      foreach n $grid {
+        sta::check_positive_integer -physics_grid $n
+        if { $n <= 0 } {
+          utl::error GPL 204 "-physics_grid '$grid' must be greater than 0."
         }
       }
     }

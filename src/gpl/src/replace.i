@@ -2,6 +2,8 @@
 // Copyright (c) 2020-2025, The OpenROAD Authors
 
 %{
+#include <sstream>
+
 #include "ord/OpenRoad.hh"
 #include "gpl/Replace.h"
 #include "odb/db.h"
@@ -36,8 +38,12 @@ static gpl::PlaceOptions getOptions(
   checkKey(keys, "-physics_field_interval", options.physicsFieldInterval);
   checkKey(keys, "-physics_start_overflow", options.physicsStartOverflow);
   if (auto it = keys.find("-physics_grid"); it != keys.end()) {
-    options.physicsGridX = std::stoi(it->second);
-    options.physicsGridY = options.physicsGridX;
+    // one size or "nx ny"
+    std::istringstream grid(it->second);
+    grid >> options.physicsGridX;
+    if (!(grid >> options.physicsGridY)) {
+      options.physicsGridY = options.physicsGridX;
+    }
   }
   checkFlag(flags, "-routability_use_grt", options.routabilityUseRudy, false);
   checkFlag(

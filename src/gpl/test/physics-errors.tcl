@@ -14,7 +14,11 @@ catch { global_placement -physics_driven -physics_checkpoint_interval 0 } msg
 puts $msg
 catch { global_placement -physics_driven -physics_grid abc } msg
 puts $msg
-catch { global_placement -physics_driven -physics_start_overflow 2 } msg
+catch { global_placement -physics_driven -physics_grid {8 16 32} } msg
+puts $msg
+catch { global_placement -physics_driven -physics_grid {8 0} } msg
+puts $msg
+catch { global_placement -physics_driven -physics_start_overflow 2 -physics_grid {32 16} } msg
 puts $msg
 catch { global_placement -physics_driven -place_ios } msg
 puts $msg

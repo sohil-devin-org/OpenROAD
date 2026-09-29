@@ -10,6 +10,7 @@
 #include <fstream>
 #include <functional>
 #include <map>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 
@@ -348,15 +349,83 @@ void Thermal::buildPowerMaps()
         bbox, die, phys.dynamic_power_w + phys.leakage_power_w);
   }
   if (config_.two_die && power_maps_.size() > 1) {
-    // Second die: uniform power (no netlist available for it).
-    PowerMap& second = power_maps_[1];
-    if (config_.second_die_power_source == "uniform"
-        && config_.second_die_power_w > 0) {
-      const double per_tile = config_.second_die_power_w / second.size();
-      for (double& v : second.values()) {
-        v += per_tile;
+    addSecondDiePower();
+  }
+}
+
+// The second die has no netlist: its power map is uniform, the mirror image
+// (face-to-face, flipped in x) of the first die, or read from a file of
+// nx*ny per-tile watts (row-major, comma or whitespace separated).  A
+// positive second_die_power_w rescales the mirror/file map to that total.
+void Thermal::addSecondDiePower()
+{
+  PowerMap& second = power_maps_[1];
+  const std::string& source = config_.second_die_power_source;
+  std::vector<double> add(second.size(), 0.0);
+  if (source == "uniform") {
+    if (config_.second_die_power_w > 0) {
+      std::fill(
+          add.begin(), add.end(), config_.second_die_power_w / second.size());
+    }
+  } else if (source == "mirror") {
+    const PowerMap& first = power_maps_[0];
+    for (int y = 0; y < second.ny(); ++y) {
+      for (int x = 0; x < second.nx(); ++x) {
+        add[second.index(x, y)]
+            = first.values()[first.index(first.nx() - 1 - x, y)];
       }
     }
+  } else if (source == "file") {
+    std::ifstream in(config_.second_die_power_file);
+    if (!in) {
+      logger_->warn(utl::THM,
+                    41,
+                    "Cannot open second die power map '{}'; the second die "
+                    "gets no power.",
+                    config_.second_die_power_file);
+      return;
+    }
+    std::vector<double> values;
+    std::string token;
+    while (in >> token) {
+      std::replace(token.begin(), token.end(), ',', ' ');
+      std::istringstream fields(token);
+      double v;
+      while (fields >> v) {
+        values.push_back(v);
+      }
+    }
+    if (values.size() != add.size()) {
+      logger_->warn(utl::THM,
+                    42,
+                    "Second die power map '{}' has {} values, expected {}x{}; "
+                    "the second die gets no power.",
+                    config_.second_die_power_file,
+                    values.size(),
+                    second.nx(),
+                    second.ny());
+      return;
+    }
+    add = std::move(values);
+  } else {
+    logger_->warn(utl::THM,
+                  43,
+                  "Unknown second_die_power_source '{}' (uniform, mirror or "
+                  "file); the second die gets no power.",
+                  source);
+    return;
+  }
+  if (source != "uniform" && config_.second_die_power_w > 0) {
+    const double total = std::accumulate(add.begin(), add.end(), 0.0);
+    if (total > 0) {
+      const double scale = config_.second_die_power_w / total;
+      for (double& v : add) {
+        v *= scale;
+      }
+    }
+  }
+  for (int i = 0; i < second.size(); ++i) {
+    second.values()[i] += add[i];
   }
 }
 
@@ -487,6 +556,10 @@ void Thermal::runTransient(const AnalyzeOptions& options,
   const int dies = config_.two_die ? 2 : 1;
   for (const ActivityPhase& phase : phases) {
     power_extractor_->setActivityScale(phase.activity_scale);
+    power_extractor_->readActivityFile(phase.activity_file.empty()
+                                           ? config_.activity_file
+                                           : phase.activity_file,
+                                       "");
     // Whole steps of dt plus a shorter final step so that the phase lasts
     // exactly duration_s.
     const int steps
@@ -523,6 +596,8 @@ void Thermal::runTransient(const AnalyzeOptions& options,
       }
     }
   }
+  power_extractor_->setActivityScale(config_.default_activity_scale);
+  power_extractor_->readActivityFile(config_.activity_file, "");
   metrics.peak_temp_c.assign(dies, 0.0);
   metrics.avg_temp_c.assign(dies, 0.0);
   for (int d = 0; d < dies; ++d) {
@@ -612,9 +687,8 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   if (block->getDieArea().area() == 0) {
     logger_->error(utl::THM, 21, "The die area is not defined.");
   }
-  if (options.corner != nullptr) {
-    power_extractor_->setCorner(options.corner);
-  }
+  // nullptr selects the current OpenSTA corner.
+  power_extractor_->setCorner(options.corner);
   derate_applier_->setCorner(power_extractor_->corner());
   ir_coupling_->setCorner(power_extractor_->corner());
   power_extractor_->readActivityFile(config_.activity_file, "");
@@ -656,6 +730,9 @@ PhysicsMetrics Thermal::analyze(const AnalyzeOptions& options)
   }
   if (options.include_timing) {
     runTiming(metrics);
+  } else if (derate_applier_->isApplied()) {
+    // Keep the STA derates in step with the new temperatures/voltages.
+    derate_applier_->apply(inst_state_);
   }
   // Electromigration: Black's equation per tile of the bottom die, with the
   // IR-drop current proxy when it is available (see
@@ -684,6 +761,7 @@ void Thermal::reset()
   has_results_ = false;
   has_ir_map_ = false;
   history_.clear();
+  displayed_snapshot_ = -1;
   for (PhysicsObserver* obs : observers_) {
     obs->onHistoryCleared();
   }
