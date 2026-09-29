@@ -30,3 +30,8 @@ No differences found.
 No differences found.
 [DEBUG PSM-thermal_heatmap] Thermal heat map: 8 x 8 tiles, auto color range 45.00 - 85.00 °C
 No differences found.
+[INFO PSM-0205] Reading HotSpot grid temperatures from missing.grid.steady.
+[ERROR PSM-0222] Unable to open HotSpot grid file missing.grid.steady.
+PSM-0222
+[ERROR WEB-0099] "Thermal" is not populated with data.
+WEB-0099

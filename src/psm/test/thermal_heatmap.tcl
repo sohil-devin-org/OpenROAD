@@ -32,3 +32,9 @@ set_thermal_color_range -auto
 set auto2_csv [make_result_file thermal_heatmap.auto2.csv]
 gui::dump_heatmap Thermal $auto2_csv
 diff_files thermal_heatmap.csvok $auto2_csv
+
+# A failed rerun clears the previous result from the heat map.
+catch { analyze_thermal -grid_file missing.grid.steady -grid {8 8} } err
+puts $err
+catch { gui::dump_heatmap Thermal [make_result_file thermal_heatmap.failed.csv] } err
+puts $err
