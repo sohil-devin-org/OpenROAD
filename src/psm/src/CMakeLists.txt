@@ -23,6 +23,8 @@ target_sources(psm
     connection.cpp
     shape.cpp
     node.cpp
+    thermal.cpp
+    thermalHeatMap.cpp
 
     debug_gui.cpp
 )

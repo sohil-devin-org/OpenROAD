@@ -50,13 +50,22 @@ COMPULSORY_TESTS = [
     "pad_connected_by_abutment",
     "report_writers_require_solution",
     "switch_top_grid",
+    "thermal_errors",
+    "thermal_fake_hotspot",
+    "thermal_grid_file",
     "top_grid_settings",
     "zerosoc_pads",
     "zerosoc_pads_check_only",
     "zerosoc_pads_check_only_disconnected",
 ]
 
-ALL_TESTS = COMPULSORY_TESTS
+# Tests that dump GUI heat maps need the gui:: commands of a
+# --//:platform=gui build.
+GUI_TESTS = [
+    "thermal_heatmap",
+]
+
+ALL_TESTS = COMPULSORY_TESTS + GUI_TESTS
 
 filegroup(
     name = "regression_resources",
@@ -144,6 +153,8 @@ filegroup(
         "ihp-sg13g2_data/sg13g2_tech.lef",
         "short_obs.lef",
         "short_pads.lef",
+        "thermal_fake_hotspot.sh",
+        "thermal_grid_file.grid",
         "sky130hd/sky130_fd_sc_hd__ff_n40C_1v95.lib",
         "sky130hd/sky130_fd_sc_hd__ss_n40C_1v40.lib",
         "sky130hd/sky130_fd_sc_hd__tt_025C_1v80.lib",
@@ -188,7 +199,11 @@ filegroup(
     regression_test(
         name = test_name,
         data = [":" + test_name + "_resources"],
-        tags = [] if test_name in COMPULSORY_TESTS else ["manual"],
+        tags = [] if test_name in COMPULSORY_TESTS + GUI_TESTS else ["manual"],
+        target_compatible_with = select({
+            "//:platform_gui": [],
+            "//conditions:default": ["@platforms//:incompatible"],
+        }) if test_name in GUI_TESTS else [],
         visibility = ["//visibility:public"],
     )
     for test_name in ALL_TESTS

@@ -1,3 +1,9 @@
+set(PSM_GUI_TESTS)
+
+if (Qt5_FOUND AND BUILD_GUI)
+  list(APPEND PSM_GUI_TESTS thermal_heatmap)
+endif()
+
 or_integration_tests(
   "psm"
   TESTS
@@ -43,9 +49,13 @@ or_integration_tests(
     pad_connected_by_abutment
     report_writers_require_solution
     switch_top_grid
+    thermal_errors
+    thermal_fake_hotspot
+    thermal_grid_file
     top_grid_settings
     zerosoc_pads
     zerosoc_pads_check_only
     zerosoc_pads_check_only_disconnected
+    ${PSM_GUI_TESTS}
 )
 

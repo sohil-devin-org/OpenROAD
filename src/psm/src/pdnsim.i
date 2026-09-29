@@ -6,6 +6,8 @@
 #include "ord/OpenRoad.hh"
 #include "psm/pdnsim.h"
 #include "sta/Scene.hh"
+#include "thermal.h"
+#include "utl/Logger.h"
 
 namespace ord {
 psm::PDNSim*
@@ -19,6 +21,17 @@ class dbNet;
 using ord::getPDNSim;
 using psm::PDNSim;
 using sta::Scene;
+
+static const psm::ThermalGrid&
+get_thermal_grid()
+{
+  const psm::ThermalGrid& grid = getPDNSim()->getThermalGrid();
+  if (grid.empty()) {
+    ord::OpenRoad::openRoad()->getLogger()->error(
+        utl::PSM, 227, "No thermal result available. Run analyze_thermal first.");
+  }
+  return grid;
+}
 
 #if TCL_MAJOR_VERSION < 9 && !defined(Tcl_Size)
   typedef int Tcl_Size;
@@ -120,6 +133,85 @@ set_inst_power(odb::dbInst* inst, Scene* corner, float power)
 {
   PDNSim* pdnsim = getPDNSim();
   pdnsim->setInstPower(inst, corner, power);
+}
+
+bool
+analyze_thermal_cmd(const char* hotspot_exe,
+                    const char* hotspot_config,
+                    const char* grid_file,
+                    const char* work_dir,
+                    int grid_rows,
+                    int grid_cols,
+                    double ambient_c,
+                    Scene* corner,
+                    int max_instances,
+                    const char* report_file)
+{
+  psm::ThermalSettings settings;
+  settings.hotspot_exe = hotspot_exe;
+  settings.hotspot_config = hotspot_config;
+  settings.grid_file = grid_file;
+  settings.work_dir = work_dir;
+  settings.grid_rows = grid_rows;
+  settings.grid_cols = grid_cols;
+  settings.ambient_c = ambient_c;
+  settings.corner = corner;
+  settings.max_instances = max_instances;
+  settings.report_file = report_file;
+
+  PDNSim* pdnsim = getPDNSim();
+  return pdnsim->analyzeThermal(settings);
+}
+
+void
+set_thermal_color_range_cmd(double min_c, double max_c)
+{
+  PDNSim* pdnsim = getPDNSim();
+  pdnsim->setThermalColorRange(std::make_pair(min_c, max_c));
+}
+
+void
+clear_thermal_color_range_cmd()
+{
+  PDNSim* pdnsim = getPDNSim();
+  pdnsim->setThermalColorRange(std::nullopt);
+}
+
+double
+thermal_peak()
+{
+  return get_thermal_grid().getMax();
+}
+
+double
+thermal_average()
+{
+  return get_thermal_grid().getAverage();
+}
+
+double
+thermal_min()
+{
+  return get_thermal_grid().getMin();
+}
+
+double
+thermal_temperature_at(double x_um, double y_um)
+{
+  const psm::ThermalGrid& grid = get_thermal_grid();
+  odb::dbBlock* block
+      = ord::OpenRoad::openRoad()->getDb()->getChip()->getBlock();
+  const odb::Point pt(block->micronsToDbu(x_um), block->micronsToDbu(y_um));
+  const std::optional<double> temperature = grid.getTemperatureAt(pt);
+  if (!temperature) {
+    ord::OpenRoad::openRoad()->getLogger()->error(
+        utl::PSM,
+        228,
+        "({}, {}) um is outside the thermal grid.",
+        x_um,
+        y_um);
+  }
+  return *temperature;
 }
 
 %} // inline

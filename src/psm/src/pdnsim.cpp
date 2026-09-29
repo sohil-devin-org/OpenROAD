@@ -21,6 +21,8 @@
 #include "odb/dbTypes.h"
 #include "shape.h"
 #include "sta/Liberty.hh"
+#include "thermal.h"
+#include "thermalHeatMap.h"
 #include "utl/Logger.h"
 #include "web/core.h"
 #include "web/heatMap.h"
@@ -44,6 +46,11 @@ PDNSim::PDNSim(utl::Logger* logger,
   heatmap_source_ = web::registerHeatMapSource(
       "IR Drop", "IRDrop", "IRDrop", [this, sta, logger]() {
         return std::make_shared<IRDropDataSource>(this, sta, logger);
+      });
+  thermal_ = std::make_unique<ThermalAnalyzer>(logger, sta);
+  thermal_heatmap_source_ = web::registerHeatMapSource(
+      "Thermal", "Thermal", "Thermal", [this, logger]() {
+        return std::make_shared<ThermalDataSource>(this, logger);
       });
 }
 
@@ -151,6 +158,74 @@ void PDNSim::writeSpiceNetwork(odb::dbNet* net,
   solver->writeSpiceFile(source_type, spice_file, corner, voltage_source_file);
 }
 
+odb::dbBlock* PDNSim::getBlock() const
+{
+  return db_->getChip() ? db_->getChip()->getBlock() : nullptr;
+}
+
+bool PDNSim::analyzeThermal(const ThermalSettings& settings)
+{
+  odb::dbBlock* block = getBlock();
+  if (block == nullptr) {
+    logger_->error(utl::PSM, 200, "No design loaded.");
+  }
+  clearThermal();
+  const bool ok = thermal_->analyze(block, settings, user_powers_);
+  if (ok) {
+    // Results refer to the current placement; drop them when it changes.
+    thermal_block_ = block;
+    addOwner(block);
+  }
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+  return ok;
+}
+
+void PDNSim::clearThermal()
+{
+  if (thermal_block_ == nullptr) {
+    return;
+  }
+  thermal_block_ = nullptr;
+  thermal_->clear();
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+}
+
+const ThermalGrid& PDNSim::getThermalGrid() const
+{
+  static const ThermalGrid empty_grid;
+  if (thermal_block_ == nullptr || thermal_block_ != getBlock()) {
+    return empty_grid;
+  }
+  return thermal_->getGrid();
+}
+
+const ThermalHotRegion* PDNSim::getThermalHotRegion() const
+{
+  const auto& region = thermal_->getHotRegion();
+  if (!region || thermal_block_ == nullptr || thermal_block_ != getBlock()) {
+    return nullptr;
+  }
+  return &region.value();
+}
+
+void PDNSim::setThermalColorRange(
+    std::optional<std::pair<double, double>> range)
+{
+  thermal_->setColorRange(range);
+  if (thermal_heatmap_source_) {
+    thermal_heatmap_source_->invalidateInstances();
+  }
+}
+
+std::optional<std::pair<double, double>> PDNSim::getThermalColorRange() const
+{
+  return thermal_->getColorRange();
+}
+
 psm::IRSolver* PDNSim::getIRSolver(odb::dbNet* net, bool floorplanning)
 {
   auto& solver = solvers_[net];
@@ -219,9 +294,30 @@ void PDNSim::clearSolvers()
   solvers_.clear();
 }
 
+void PDNSim::inDbInstCreate(odb::dbInst*)
+{
+  clearThermal();
+}
+
+void PDNSim::inDbInstDestroy(odb::dbInst*)
+{
+  clearThermal();
+}
+
+void PDNSim::inDbInstSwapMasterAfter(odb::dbInst*)
+{
+  clearThermal();
+}
+
 void PDNSim::inDbPostMoveInst(odb::dbInst*)
 {
   clearSolvers();
+  clearThermal();
+}
+
+void PDNSim::inDbBlockSetDieArea(odb::dbBlock*)
+{
+  clearThermal();
 }
 
 void PDNSim::inDbNetDestroy(odb::dbNet*)

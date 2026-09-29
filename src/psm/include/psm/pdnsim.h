@@ -7,6 +7,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 
 #include "odb/PtrSetMap.h"
 #include "odb/db.h"
@@ -40,6 +41,10 @@ using HeatMapSourceHandle = std::shared_ptr<HeatMapSourceRegistration>;
 namespace psm {
 class IRDropDataSource;
 class IRSolver;
+class ThermalAnalyzer;
+class ThermalGrid;
+struct ThermalHotRegion;
+struct ThermalSettings;
 
 enum class GeneratedSourceType
 {
@@ -107,7 +112,11 @@ class PDNSim : public odb::dbBlockCallBackObj
   void setGeneratedSourceSettings(const GeneratedSourceSettings& settings);
 
   // from dbBlockCallBackObj
+  void inDbInstCreate(odb::dbInst*) override;
+  void inDbInstDestroy(odb::dbInst*) override;
+  void inDbInstSwapMasterAfter(odb::dbInst*) override;
   void inDbPostMoveInst(odb::dbInst*) override;
+  void inDbBlockSetDieArea(odb::dbBlock*) override;
   void inDbNetDestroy(odb::dbNet*) override;
   void inDbBTermPostConnect(odb::dbBTerm*) override;
   void inDbBTermPostDisConnect(odb::dbBTerm*, odb::dbNet*) override;
@@ -128,6 +137,13 @@ class PDNSim : public odb::dbBlockCallBackObj
   void addDecapMaster(odb::dbMaster* decap_master, double decap_cap);
   void insertDecapCells(double target, const char* net_name);
 
+  // Thermal analysis through the external HotSpot simulator.
+  bool analyzeThermal(const ThermalSettings& settings);
+  const ThermalGrid& getThermalGrid() const;
+  const ThermalHotRegion* getThermalHotRegion() const;
+  void setThermalColorRange(std::optional<std::pair<double, double>> range);
+  std::optional<std::pair<double, double>> getThermalColorRange() const;
+
   odb::dbNet* getLastAnalyzedNet() const { return last_net_; }
   sta::Scene* getLastAnalyzedCorner() const { return last_corner_; }
 
@@ -137,6 +153,8 @@ class PDNSim : public odb::dbBlockCallBackObj
   odb::dbNet* findPowerNet(const char* net_name);
 
   IRSolver* getIRSolver(odb::dbNet* net, bool floorplanning);
+  odb::dbBlock* getBlock() const;
+  void clearThermal();
 
   odb::dbDatabase* db_ = nullptr;
   sta::dbSta* sta_ = nullptr;
@@ -145,6 +163,9 @@ class PDNSim : public odb::dbBlockCallBackObj
   utl::Logger* logger_ = nullptr;
 
   web::HeatMapSourceHandle heatmap_source_;
+  web::HeatMapSourceHandle thermal_heatmap_source_;
+  std::unique_ptr<ThermalAnalyzer> thermal_;
+  odb::dbBlock* thermal_block_ = nullptr;
 
   bool debug_gui_enabled_ = false;
 
