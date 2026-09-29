@@ -21,6 +21,7 @@ void PlacementPhysics::beginPlacement()
   // the timing-driven net reweighting sees physics-aware slacks.
   derating_was_enabled_ = thermal_->deratingEnabled();
   thermal_->setDeratingEnabled(true);
+  thermal_->resetIrDrop();
   in_placement_ = true;
 }
 
@@ -29,6 +30,7 @@ void PlacementPhysics::endPlacement()
   if (in_placement_ && !derating_was_enabled_) {
     thermal_->setDeratingEnabled(false);
   }
+  thermal_->resetIrDrop();
   in_placement_ = false;
 }
 

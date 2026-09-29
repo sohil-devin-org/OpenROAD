@@ -161,6 +161,8 @@ class IrDropCoupling
 
   void setCorner(sta::Scene* corner) { corner_ = corner; }
   bool available() const { return psm_ != nullptr; }
+  // Forget a previous failure so the next run() analyzes the grid again.
+  void reset();
   // Returns false (vdd_v left at nominal, one THM warning) when no power
   // grid / supply net / sources are available or the analysis fails.
   bool run(odb::dbBlock* block,
@@ -185,6 +187,9 @@ class IrDropCoupling
   bool warned_no_grid_ = false;
   bool warned_failed_ = false;
   bool warned_vdd_ = false;
+  // A failed analysis is not retried until reset(); PDNSim logs an error
+  // for every attempt on an unconnected grid.
+  bool failed_ = false;
 };
 
 // Black's-equation relative lifetime of power-grid segments.

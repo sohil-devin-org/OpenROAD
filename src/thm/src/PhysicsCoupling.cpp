@@ -479,6 +479,13 @@ odb::dbTechLayer* IrDropCoupling::lowestLayer(odb::dbNet* net)
   return lowest;
 }
 
+void IrDropCoupling::reset()
+{
+  warned_no_grid_ = false;
+  warned_failed_ = false;
+  failed_ = false;
+}
+
 bool IrDropCoupling::run(odb::dbBlock* block,
                          const ThermalConfig& config,
                          const ThermalGrid& grid,
@@ -490,7 +497,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
   for (auto& [inst, phys] : state) {
     phys.vdd_v = config.nominal_vdd_v;
   }
-  if (psm_ == nullptr) {
+  if (psm_ == nullptr || failed_) {
     return false;
   }
   odb::dbNet* net = findPowerNet(block, config.ir_power_net);
@@ -565,6 +572,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
                            "",
                            config.ir_vsrc_file);
   } catch (const std::exception& e) {
+    failed_ = true;
     if (!warned_failed_) {
       warned_failed_ = true;
       logger_->warn(utl::THM,
@@ -591,6 +599,7 @@ bool IrDropCoupling::run(odb::dbBlock* block,
   psm::PDNSim::IRDropByPoint drops;
   psm_->getIRDropForLayer(net, corner, layer, drops);
   if (drops.empty()) {
+    failed_ = true;
     if (!warned_failed_) {
       warned_failed_ = true;
       logger_->warn(utl::THM,
