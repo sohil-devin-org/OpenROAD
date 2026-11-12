@@ -64,9 +64,9 @@ For issue reproductions, keep the test case minimal and focused on the failing t
    write_verilog $out_verilog
    ```
 
-4. **Verification with `diff_file`**: Compare against golden files
+4. **Verification with `diff_files`**: Compare against golden files
    ```tcl
-   diff_file ${test_name}.vok $out_verilog
+   diff_files ${test_name}.vok $out_verilog
    ```
 
 5. **Generate `<test_name>.ok` file**: Create golden test log by executing the script, redirecting stdout, and removing the openroad banner at the top.
@@ -78,7 +78,7 @@ For issue reproductions, keep the test case minimal and focused on the failing t
 
 ### Golden File Notes
 - `.ok` = log golden file (full stdout), `.vok` = verilog golden file
-- **`diff_file` reports only the first difference** -- when regenerating golden files, regenerate the entire output file rather than relying on incremental diffs.
+- **`diff_files` reports only the first difference** -- when regenerating golden files, regenerate the entire output file rather than relying on incremental diffs.
 
 ## Unit Tests
 
