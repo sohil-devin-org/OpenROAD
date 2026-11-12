@@ -56,8 +56,13 @@ set out_def [make_result_file $def_filename]
 write_def $out_def
 
 # Compare against golden file
-diff_file ${test_name}.defok $out_def
+diff_files ${test_name}.defok $out_def
 ```
+
+Every data file the test reads (LEF/DEF/lib/sdc, fixture scripts) must be
+visible to Bazel. Most modules glob common extensions into a
+`regression_resources` filegroup in `src/MODULE/test/BUILD`; add any file
+the glob misses (e.g. `.sh`, `.py`, `.grid`) to that filegroup explicitly.
 
 ### Test design files
 
@@ -74,25 +79,32 @@ existing files don't cover. Keep test data minimal.
 
 ## 3. Generate golden files
 
-Run the test and capture output:
+The `.ok` file must match exactly what `test/regression_test.sh` captures:
+stdout and stderr combined, run from `src/MODULE/test`. `-no_splash`
+suppresses the banner, so no manual editing is needed.
+
 ```bash
+# Build the binary once (Bazel; CMake is deprecated in this repo)
+bazelisk build //:openroad
+
 cd src/MODULE/test
-
-# Run with openroad to generate output
-openroad -no_splash -no_init -exit TEST_NAME.tcl > TEST_NAME.ok 2>&1
-
-# Remove the openroad banner from the .ok file if present
-# The .ok file should contain only the test's stdout
+../../../bazel-bin/openroad -no_splash -no_init -exit TEST_NAME.tcl > TEST_NAME.ok 2>&1
 ```
 
-If the test uses `diff_file`, also generate the golden output file
-(e.g., `TEST_NAME.defok`) by running once and copying the result file.
+Golden files must not contain anything that varies between runs or
+machines (absolute paths, timestamps, runtimes, thread counts).
+
+If the test uses `diff_files`, also generate the golden output file
+(e.g., `TEST_NAME.defok`) by copying the result written under `results/`.
+Inspect every golden before committing; never accept output you have not
+read.
 
 ## 4. Register in BOTH build systems
 
-This is the most common mistake. **Every test must be in both CMake AND
-Bazel.** CMake-only tests silently pass locally but are missing from
-Bazel CI.
+This is the most common mistake. **Every Tcl/Python integration test must
+be in both CMake AND Bazel.** CMake-only tests silently pass locally but
+are missing from Bazel CI. (Doc checks such as `*_man_tcl_check` and
+`*_readme_msgs_check` are Bazel-only by convention; leave them that way.)
 
 ### CMake -- `src/MODULE/test/CMakeLists.txt`
 
@@ -197,7 +209,11 @@ TEST_F(TestFeature, HandlesEdgeCase) {
 }
 ```
 
-### CMake registration -- `src/MODULE/test/cpp/CMakeLists.txt`
+### CMake registration
+
+Use whichever file the module already uses: `src/MODULE/test/cpp/CMakeLists.txt`
+(e.g. odb, rsz, grt) or `src/MODULE/test/CMakeLists.txt` (e.g. gpl, dpl,
+drt, cts). Match `WORKING_DIRECTORY` to the neighbouring tests.
 
 ```cmake
 add_executable(TestName TestName.cpp)
@@ -237,17 +253,24 @@ cc_test(
 
 ## 6. Run and verify
 
-`./regression` is a thin ctest wrapper that filters by module label, so
-the standard ctest flags apply. Use `-R` to match a single test by name:
+Run through Bazel. Integration tests are named `<test>-tcl_test` (or
+`<test>-py_test`); C++ tests use their `cc_test` name. Add
+`--//:platform=gui` if the module or the binary you built needs the GUI.
 
 ```bash
-cd src/MODULE/test
-./regression -R TEST_NAME
+bazelisk test //src/MODULE/test:TEST_NAME-tcl_test --test_output=errors
 
-# Verify test is discoverable in both systems
-cd ../../../build
-ctest -N | grep MODULE.*TEST_NAME
+# Confirm Bazel discovers the target
+bazelisk query 'tests(//src/MODULE/test/...)' | grep TEST_NAME
 ```
+
+On failure, the log and diff against the golden are written to
+`bazel-testlogs/src/MODULE/test/TEST_NAME-tcl_test/test.outputs/`
+(zipped as `outputs.zip` unless you pass `--nozip_undeclared_test_outputs`).
+
+`./regression -R TEST_NAME` and `ctest -N` only work if a CMake `build/`
+directory exists; for CMake, just check the name was added to
+`or_integration_tests(...)`.
 
 ## 7. Format and commit
 
@@ -266,10 +289,10 @@ Test for DESCRIPTION."
 
 ## Checklist
 
-- [ ] Test runs successfully: `./regression -R TEST_NAME`
+- [ ] Test passes: `bazelisk test //src/MODULE/test:TEST_NAME-tcl_test`
 - [ ] Golden file generated and committed
 - [ ] Registered in CMake `CMakeLists.txt`
-- [ ] Registered in Bazel `BUILD`
+- [ ] Registered in Bazel `BUILD` (and any extra data files added to `regression_resources`)
 - [ ] Test data is minimal (reuse existing files when possible)
 - [ ] C++ files formatted with clang-format
 - [ ] Commit is signed off (`-s`)
